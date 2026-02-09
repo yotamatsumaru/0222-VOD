@@ -8,6 +8,7 @@ import stripeRoutes from './routes/stripe';
 import eventsRoutes from './routes/events';
 import artistsRoutes from './routes/artists';
 import watchRoutes from './routes/watch';
+import adminRoutes from './routes/admin';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -22,6 +23,7 @@ app.route('/api/stripe', stripeRoutes);
 app.route('/api/events', eventsRoutes);
 app.route('/api/artists', artistsRoutes);
 app.route('/api/watch', watchRoutes);
+app.route('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -458,6 +460,147 @@ app.get('/success', (c) => {
             const sessionId = '${sessionId || ''}';
         </script>
         <script src="/static/success.js"></script>
+    </body>
+    </html>
+  `);
+});
+
+// Admin panel
+app.get('/admin', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>管理画面 - StreamingPlatform</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-broadcast-tower text-purple-500 text-2xl mr-3"></i>
+                        <a href="/" class="text-white text-xl font-bold">StreamingPlatform</a>
+                        <span class="ml-4 text-sm text-gray-400">管理画面</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2">
+                            <i class="fas fa-home mr-1"></i>ホーム
+                        </a>
+                        <button id="logout-btn" class="text-red-400 hover:text-red-300 px-3 py-2">
+                            <i class="fas fa-sign-out-alt mr-1"></i>ログアウト
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div id="login-section" class="hidden">
+                <div class="max-w-md mx-auto bg-black bg-opacity-40 backdrop-blur-md rounded-xl p-8 border border-gray-800">
+                    <h2 class="text-2xl font-bold text-white mb-6 text-center">
+                        <i class="fas fa-lock mr-2"></i>管理者ログイン
+                    </h2>
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">ユーザー名</label>
+                            <input type="text" id="username" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2">パスワード</label>
+                            <input type="password" id="password" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:outline-none" required>
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i>ログイン
+                        </button>
+                    </form>
+                    <div id="login-error" class="hidden mt-4 p-3 bg-red-900 bg-opacity-20 border border-red-800 rounded text-red-400 text-sm"></div>
+                </div>
+            </div>
+
+            <div id="admin-content" class="hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-white mb-4">
+                        <i class="fas fa-tachometer-alt text-purple-500 mr-2"></i>
+                        管理ダッシュボード
+                    </h1>
+                </div>
+
+                <!-- Tabs -->
+                <div class="mb-6 border-b border-gray-800">
+                    <nav class="flex space-x-4">
+                        <button onclick="switchTab('stats')" class="tab-btn active px-4 py-2 text-white border-b-2 border-purple-500">
+                            <i class="fas fa-chart-line mr-2"></i>統計
+                        </button>
+                        <button onclick="switchTab('events')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
+                            <i class="fas fa-calendar-alt mr-2"></i>イベント管理
+                        </button>
+                        <button onclick="switchTab('artists')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
+                            <i class="fas fa-users mr-2"></i>アーティスト管理
+                        </button>
+                        <button onclick="switchTab('purchases')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
+                            <i class="fas fa-receipt mr-2"></i>購入履歴
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Stats Tab -->
+                <div id="tab-stats" class="tab-content">
+                    <div id="stats-content">
+                        <div class="text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Tab -->
+                <div id="tab-events" class="tab-content hidden">
+                    <div class="mb-6">
+                        <button onclick="showCreateEventModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                            <i class="fas fa-plus mr-2"></i>イベント作成
+                        </button>
+                    </div>
+                    <div id="events-content">
+                        <div class="text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artists Tab -->
+                <div id="tab-artists" class="tab-content hidden">
+                    <div class="mb-6">
+                        <button onclick="showCreateArtistModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                            <i class="fas fa-plus mr-2"></i>アーティスト作成
+                        </button>
+                    </div>
+                    <div id="artists-content">
+                        <div class="text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchases Tab -->
+                <div id="tab-purchases" class="tab-content hidden">
+                    <div id="purchases-content">
+                        <div class="text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/admin.js"></script>
     </body>
     </html>
   `);
