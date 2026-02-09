@@ -1,0 +1,31 @@
+{
+  "name": "webapp",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:sandbox": "wrangler pages dev dist --d1=streaming-platform-production --local --ip 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "preview": "wrangler pages dev dist",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:migrate:local": "wrangler d1 migrations apply streaming-platform-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply streaming-platform-production",
+    "db:seed": "wrangler d1 execute streaming-platform-production --local --file=./seed.sql",
+    "db:console:local": "wrangler d1 execute streaming-platform-production --local",
+    "db:console:prod": "wrangler d1 execute streaming-platform-production",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "hono": "^4.11.9",
+    "hono-rate-limiter": "^0.5.3",
+    "stripe": "^20.3.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@hono/vite-build": "^1.2.0",
+    "@hono/vite-dev-server": "^0.18.2",
+    "vite": "^6.3.5",
+    "wrangler": "^4.4.0"
+  }
+}

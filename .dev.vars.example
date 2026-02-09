@@ -1,0 +1,14 @@
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# JWT Secret for access tokens
+JWT_SECRET=your_random_jwt_secret_here_change_in_production
+
+# CloudFront Configuration (Optional - for signed URLs)
+# CLOUDFRONT_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----
+# CLOUDFRONT_KEY_PAIR_ID=your_cloudfront_key_pair_id_here
+
+# Admin Credentials (Optional - for future admin panel)
+# ADMIN_USERNAME=admin
+# ADMIN_PASSWORD=change_this_password
