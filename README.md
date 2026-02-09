@@ -41,13 +41,31 @@
    - ライブ配信とアーカイブ配信の切り替え
    - レスポンシブデザイン
 
-### 🚧 未実装機能
-
-1. **管理画面**
-   - イベント作成・編集・削除
-   - アーティスト管理
-   - チケット管理
+7. **管理画面** ⭐ NEW
+   - Basic認証による管理者ログイン
+   - ダッシュボード（売上統計、購入数）
+   - イベント管理（ステータス更新）
+   - アーティスト一覧表示
    - 購入履歴の確認
+   - イベント別売上レポート
+
+### 🚧 今後の拡張予定
+
+1. **管理画面の機能拡張**
+   - イベント作成・編集フォーム
+   - アーティスト作成・編集フォーム
+   - チケット作成・編集フォーム
+   - 画像アップロード機能
+
+2. **メール通知**
+   - 購入確認メール
+   - 視聴URL送信
+   - イベント開始通知
+
+3. **ユーザーマイページ**
+   - 購入履歴表示
+   - マイチケット管理
+   - プロフィール編集
 
 ## 📁 プロジェクト構造
 
@@ -66,7 +84,8 @@ webapp/
 │       ├── stripe.ts          # Stripe API ルート
 │       ├── events.ts          # イベント API
 │       ├── artists.ts         # アーティスト API
-│       └── watch.ts           # 視聴認証 API
+│       ├── watch.ts           # 視聴認証 API
+│       └── admin.ts           # 管理画面 API
 ├── public/
 │   └── static/
 │       ├── events.js          # イベント一覧 UI
@@ -74,12 +93,14 @@ webapp/
 │       ├── artists.js         # アーティスト一覧 UI
 │       ├── artist-detail.js   # アーティスト詳細 UI
 │       ├── watch.js           # 視聴ページ UI
-│       └── success.js         # 購入完了ページ UI
+│       ├── success.js         # 購入完了ページ UI
+│       └── admin.js           # 管理画面 UI
 ├── migrations/
 │   └── 0001_initial_schema.sql # データベーススキーマ
 ├── seed.sql                   # サンプルデータ
 ├── ecosystem.config.cjs       # PM2 設定
 ├── wrangler.jsonc             # Cloudflare 設定
+├── DEPLOYMENT.md              # デプロイ手順書
 └── package.json
 ```
 
@@ -118,6 +139,19 @@ webapp/
 - `POST /api/watch/stream-url` - 署名付きURL取得
 - `POST /api/watch/stream-cookies` - 署名付きCookie取得
 
+### 管理画面 API ⭐ NEW
+
+- `GET /api/admin/stats` - ダッシュボード統計
+- `GET /api/admin/events` - イベント一覧（管理者用）
+- `POST /api/admin/events` - イベント作成
+- `PATCH /api/admin/events/:id/status` - イベントステータス更新
+- `GET /api/admin/artists` - アーティスト一覧（管理者用）
+- `POST /api/admin/artists` - アーティスト作成
+- `POST /api/admin/tickets` - チケット作成
+- `GET /api/admin/purchases` - 購入履歴一覧
+
+**認証**: すべての管理画面APIはBasic認証が必要
+
 ## 🌐 公開 URL
 
 - **開発環境**: https://3000-itoc5ynk8roohlf644w1s-cbeee0f9.sandbox.novita.ai
@@ -132,6 +166,7 @@ webapp/
 - `/artists/:slug` - アーティスト詳細
 - `/watch/:eventSlug?token=xxx` - 視聴ページ
 - `/success?session_id=xxx` - 購入完了ページ
+- `/admin` - 管理画面（認証必要） ⭐ NEW
 
 ## ⚙️ セットアップ手順
 
@@ -153,6 +188,10 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 
 # JWT Secret
 JWT_SECRET=your_random_jwt_secret_here
+
+# Admin Credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_secure_password
 
 # CloudFront (Optional)
 # CLOUDFRONT_PRIVATE_KEY=...
@@ -210,6 +249,14 @@ Stripe テストモードで使用できるカード:
 3. **決済**: Stripe Checkout で安全に決済
 4. **視聴**: 購入完了後、アクセストークンを使って視聴ページにアクセス
 
+### 管理者フロー ⭐ NEW
+
+1. **ログイン**: `/admin` ページで管理者認証
+2. **ダッシュボード確認**: 売上統計や購入数を確認
+3. **イベント管理**: イベントのステータスを更新（upcoming → live → ended → archived）
+4. **購入履歴確認**: ユーザーの購入履歴を閲覧
+5. **統計確認**: イベント別の売上レポートを確認
+
 ### AWS 配信環境との連携
 
 このフロントエンドは、以下のAWS環境と連携することを想定しています:
@@ -249,30 +296,32 @@ WHERE id = 1;
 
 ## 🚀 デプロイ
 
-### Cloudflare Pages へのデプロイ
+詳細なデプロイ手順は [DEPLOYMENT.md](./DEPLOYMENT.md) を参照してください。
+
+### クイックスタート
 
 ```bash
-# ビルド
+# 1. ビルド
 npm run build
 
-# デプロイ
-npm run deploy
+# 2. Cloudflare にログイン
+wrangler login
 
-# または直接
+# 3. D1 データベース作成
+wrangler d1 create streaming-platform-production
+
+# 4. マイグレーション実行
+npm run db:migrate:prod
+
+# 5. デプロイ
 npx wrangler pages deploy dist --project-name streaming-platform
-```
 
-### 環境変数の設定（本番環境）
-
-```bash
-# Stripe Secret Key
-npx wrangler pages secret put STRIPE_SECRET_KEY --project-name streaming-platform
-
-# Stripe Webhook Secret
-npx wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name streaming-platform
-
-# JWT Secret
-npx wrangler pages secret put JWT_SECRET --project-name streaming-platform
+# 6. 環境変数設定
+wrangler pages secret put STRIPE_SECRET_KEY --project-name streaming-platform
+wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name streaming-platform
+wrangler pages secret put JWT_SECRET --project-name streaming-platform
+wrangler pages secret put ADMIN_USERNAME --project-name streaming-platform
+wrangler pages secret put ADMIN_PASSWORD --project-name streaming-platform
 ```
 
 ## 📊 サンプルデータ
