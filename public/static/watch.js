@@ -85,11 +85,23 @@ async function initializePlayer() {
         
         videoElement = document.getElementById('videoPlayer');
         
+        // For MP4, try to play when ready
+        if (isMP4) {
+            console.log('MP4 video detected, waiting for canplay event');
+            videoElement.addEventListener('canplay', function() {
+                console.log('MP4 video ready to play');
+                videoElement.play().catch(e => {
+                    console.log('Autoplay prevented:', e);
+                    // User interaction required for autoplay
+                });
+            });
+        }
         // For HLS streams, use HLS.js if available
-        if (isHLS) {
+        else if (isHLS) {
             if (Hls.isSupported()) {
+                console.log('Using HLS.js for HLS playback');
                 hls = new Hls({
-                    debug: false,
+                    debug: true,
                     enableWorker: true,
                     lowLatencyMode: event.eventType === 'live',
                     backBufferLength: 90
@@ -129,6 +141,7 @@ async function initializePlayer() {
                 
             } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                 // Native HLS support (Safari)
+                console.log('Using native HLS support (Safari)');
                 videoElement.src = streamUrl;
                 videoElement.addEventListener('loadedmetadata', function() {
                     console.log('Native HLS loaded');
@@ -140,27 +153,40 @@ async function initializePlayer() {
                 showError('お使いのブラウザはHLS配信をサポートしていません。');
                 return;
             }
+        } else {
+            console.error('Unknown video format:', streamUrl);
+            showError('サポートされていない動画形式です。');
+            return;
         }
         
         // Video event listeners
         videoElement.addEventListener('error', function(e) {
-            console.error('Video error:', e);
+            console.error('Video error event:', e);
             const error = videoElement.error;
             let errorMessage = '動画の再生中にエラーが発生しました。';
             
             if (error) {
+                console.error('Video error details:', {
+                    code: error.code,
+                    message: error.message,
+                    MEDIA_ERR_ABORTED: error.MEDIA_ERR_ABORTED,
+                    MEDIA_ERR_NETWORK: error.MEDIA_ERR_NETWORK,
+                    MEDIA_ERR_DECODE: error.MEDIA_ERR_DECODE,
+                    MEDIA_ERR_SRC_NOT_SUPPORTED: error.MEDIA_ERR_SRC_NOT_SUPPORTED
+                });
+                
                 switch(error.code) {
                     case error.MEDIA_ERR_ABORTED:
                         errorMessage = '動画の読み込みが中断されました。';
                         break;
                     case error.MEDIA_ERR_NETWORK:
-                        errorMessage = 'ネットワークエラーが発生しました。';
+                        errorMessage = 'ネットワークエラーが発生しました。動画URLを確認してください。';
                         break;
                     case error.MEDIA_ERR_DECODE:
                         errorMessage = '動画のデコードに失敗しました。';
                         break;
                     case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        errorMessage = 'この動画形式はサポートされていません。';
+                        errorMessage = 'この動画形式はサポートされていません。MP4またはHLS(.m3u8)形式を使用してください。';
                         break;
                 }
             }
@@ -168,9 +194,31 @@ async function initializePlayer() {
             showError(errorMessage);
         });
         
-        videoElement.addEventListener('loadstart', () => console.log('Loading video...'));
-        videoElement.addEventListener('canplay', () => console.log('Video ready to play'));
-        videoElement.addEventListener('playing', () => console.log('Video playing'));
+        videoElement.addEventListener('loadstart', () => {
+            console.log('Loading video...', streamUrl);
+        });
+        videoElement.addEventListener('loadedmetadata', () => {
+            console.log('Video metadata loaded:', {
+                duration: videoElement.duration,
+                videoWidth: videoElement.videoWidth,
+                videoHeight: videoElement.videoHeight
+            });
+        });
+        videoElement.addEventListener('loadeddata', () => {
+            console.log('Video data loaded');
+        });
+        videoElement.addEventListener('canplay', () => {
+            console.log('Video ready to play');
+        });
+        videoElement.addEventListener('playing', () => {
+            console.log('Video playing');
+        });
+        videoElement.addEventListener('waiting', () => {
+            console.log('Video buffering...');
+        });
+        videoElement.addEventListener('stalled', () => {
+            console.log('Video stalled');
+        });
         
     } catch (error) {
         console.error('Failed to initialize player:', error);
