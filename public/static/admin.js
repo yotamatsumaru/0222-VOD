@@ -219,6 +219,9 @@ async function loadEvents() {
                                 </div>
                             </div>
                             <div class="flex space-x-2">
+                                <button onclick="editEvent(${event.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
+                                    <i class="fas fa-edit mr-1"></i>編集
+                                </button>
                                 <select onchange="updateEventStatus(${event.id}, this.value)" class="bg-gray-900 text-white px-3 py-2 rounded border border-gray-700">
                                     <option value="upcoming" ${event.status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
                                     <option value="live" ${event.status === 'live' ? 'selected' : ''}>Live</option>
@@ -245,6 +248,106 @@ async function updateEventStatus(eventId, status) {
     } catch (error) {
         console.error('Failed to update event status:', error);
         alert('更新に失敗しました');
+    }
+}
+
+// Edit event
+async function editEvent(eventId) {
+    try {
+        const response = await adminAPI('get', `/api/admin/events`);
+        const event = response.data.find(e => e.id === eventId);
+        
+        if (!event) {
+            alert('イベントが見つかりません');
+            return;
+        }
+        
+        const container = document.getElementById('events-content');
+        container.innerHTML = `
+            <div class="bg-black bg-opacity-40 backdrop-blur-md rounded-xl p-6 border border-gray-800 max-w-3xl">
+                <h3 class="text-2xl font-bold text-white mb-6">イベント編集</h3>
+                <form id="edit-event-form" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-300 mb-2">タイトル</label>
+                        <input type="text" id="event-title" value="${event.title}" 
+                               class="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-purple-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">説明</label>
+                        <textarea id="event-description" rows="4"
+                                  class="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-purple-500 focus:outline-none">${event.description || ''}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">
+                            <i class="fas fa-link mr-1"></i>
+                            配信URL (Stream URL)
+                        </label>
+                        <input type="url" id="event-stream-url" value="${event.stream_url || ''}" 
+                               placeholder="https://your-cloudfront.net/live/stream.m3u8"
+                               class="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-purple-500 focus:outline-none">
+                        <p class="text-gray-500 text-sm mt-1">
+                            AWS CloudFrontの配信URL（HLS: .m3u8 または MP4: .mp4）
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">
+                            <i class="fas fa-archive mr-1"></i>
+                            アーカイブURL (Archive URL)
+                        </label>
+                        <input type="url" id="event-archive-url" value="${event.archive_url || ''}" 
+                               placeholder="https://your-cloudfront.net/archive/video.mp4"
+                               class="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-purple-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2">サムネイルURL</label>
+                        <input type="url" id="event-thumbnail-url" value="${event.thumbnail_url || ''}" 
+                               placeholder="https://your-cloudfront.net/thumbnails/event.jpg"
+                               class="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-purple-500 focus:outline-none">
+                    </div>
+                    
+                    <div class="flex space-x-4 pt-4">
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                            <i class="fas fa-save mr-2"></i>
+                            保存
+                        </button>
+                        <button type="button" onclick="loadEvents()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition">
+                            <i class="fas fa-times mr-2"></i>
+                            キャンセル
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Form submit handler
+        document.getElementById('edit-event-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateData = {
+                title: document.getElementById('event-title').value,
+                description: document.getElementById('event-description').value,
+                stream_url: document.getElementById('event-stream-url').value,
+                archive_url: document.getElementById('event-archive-url').value,
+                thumbnail_url: document.getElementById('event-thumbnail-url').value,
+            };
+            
+            try {
+                await adminAPI('patch', `/api/admin/events/${eventId}`, updateData);
+                alert('イベントを更新しました');
+                loadEvents();
+            } catch (error) {
+                console.error('Failed to update event:', error);
+                alert('更新に失敗しました');
+            }
+        });
+        
+    } catch (error) {
+        console.error('Failed to load event:', error);
+        alert('イベントの読み込みに失敗しました');
     }
 }
 

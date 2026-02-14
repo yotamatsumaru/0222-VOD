@@ -95,6 +95,33 @@ admin.patch('/events/:id/status', zValidator('json', updateStatusSchema), async 
   }
 });
 
+// Update event details
+const updateEventSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  stream_url: z.string().optional(),
+  archive_url: z.string().optional(),
+  thumbnail_url: z.string().optional(),
+  cloudfront_key_pair_id: z.string().optional(),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
+});
+
+admin.patch('/events/:id', zValidator('json', updateEventSchema), async (c) => {
+  try {
+    const eventId = parseInt(c.req.param('id'));
+    const data = c.req.valid('json');
+    const db = new Database(c.env.DB);
+
+    await db.updateEvent(eventId, data);
+
+    return c.json({ message: 'Event updated successfully' });
+  } catch (error: any) {
+    console.error('Admin update event error:', error);
+    return c.json({ error: 'Failed to update event', details: error.message }, 500);
+  }
+});
+
 // Get all artists
 admin.get('/artists', async (c) => {
   try {

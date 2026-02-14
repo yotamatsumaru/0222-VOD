@@ -80,6 +80,54 @@ export class Database {
       .bind(status, id).run();
   }
 
+  async updateEvent(id: number, data: Partial<Event>): Promise<void> {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (data.title !== undefined) {
+      fields.push('title = ?');
+      values.push(data.title);
+    }
+    if (data.description !== undefined) {
+      fields.push('description = ?');
+      values.push(data.description);
+    }
+    if (data.stream_url !== undefined) {
+      fields.push('stream_url = ?');
+      values.push(data.stream_url);
+    }
+    if (data.archive_url !== undefined) {
+      fields.push('archive_url = ?');
+      values.push(data.archive_url);
+    }
+    if (data.thumbnail_url !== undefined) {
+      fields.push('thumbnail_url = ?');
+      values.push(data.thumbnail_url);
+    }
+    if (data.cloudfront_key_pair_id !== undefined) {
+      fields.push('cloudfront_key_pair_id = ?');
+      values.push(data.cloudfront_key_pair_id);
+    }
+    if (data.start_time !== undefined) {
+      fields.push('start_time = ?');
+      values.push(data.start_time);
+    }
+    if (data.end_time !== undefined) {
+      fields.push('end_time = ?');
+      values.push(data.end_time);
+    }
+
+    if (fields.length === 0) {
+      return;
+    }
+
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(id);
+
+    const query = `UPDATE events SET ${fields.join(', ')} WHERE id = ?`;
+    await this.db.prepare(query).bind(...values).run();
+  }
+
   // Tickets
   async getTicketsByEventId(eventId: number): Promise<Ticket[]> {
     const result = await this.db.prepare(
