@@ -358,21 +358,45 @@ app.get('/artists', (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
-        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800">
+        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
                     <div class="flex items-center">
                         <i class="fas fa-broadcast-tower text-purple-500 text-2xl mr-3"></i>
-                        <a href="/" class="text-white text-xl font-bold">StreamingPlatform</a>
+                        <a href="/" class="text-white text-xl font-bold hover:text-purple-400 transition">StreamingPlatform</a>
                     </div>
-                    <div class="flex space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2">ホーム</a>
-                        <a href="/artists" class="text-white px-3 py-2">アーティスト</a>
-                        <a href="/events" class="text-gray-300 hover:text-white px-3 py-2">イベント</a>
+                    
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 transition">ホーム</a>
+                        <a href="/artists" class="text-white px-3 py-2 transition">アーティスト</a>
+                        <a href="/events" class="text-gray-300 hover:text-white px-3 py-2 transition">イベント</a>
                     </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white p-2 hover:text-purple-400 transition">
+                        <i id="hamburger-icon" class="fas fa-bars text-2xl"></i>
+                        <i id="close-icon" class="fas fa-times text-2xl hidden"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="hidden md:hidden bg-black bg-opacity-95 border-t border-gray-800">
+                <div class="px-4 py-3 space-y-1">
+                    <a href="/" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-home mr-2"></i>ホーム
+                    </a>
+                    <a href="/artists" class="block text-white bg-purple-600 px-3 py-2 rounded transition">
+                        <i class="fas fa-users mr-2"></i>アーティスト
+                    </a>
+                    <a href="/events" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-calendar-alt mr-2"></i>イベント
+                    </a>
                 </div>
             </div>
         </nav>
+        <script src="/static/nav.js"></script>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <h1 class="text-2xl md:text-4xl font-bold text-white mb-8">
@@ -410,21 +434,45 @@ app.get('/artists/:slug', (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
-        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800">
+        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
                     <div class="flex items-center">
                         <i class="fas fa-broadcast-tower text-purple-500 text-2xl mr-3"></i>
-                        <a href="/" class="text-white text-xl font-bold">StreamingPlatform</a>
+                        <a href="/" class="text-white text-xl font-bold hover:text-purple-400 transition">StreamingPlatform</a>
                     </div>
-                    <div class="flex space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2">ホーム</a>
-                        <a href="/artists" class="text-gray-300 hover:text-white px-3 py-2">アーティスト</a>
-                        <a href="/events" class="text-gray-300 hover:text-white px-3 py-2">イベント</a>
+                    
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 transition">ホーム</a>
+                        <a href="/artists" class="text-gray-300 hover:text-white px-3 py-2 transition">アーティスト</a>
+                        <a href="/events" class="text-gray-300 hover:text-white px-3 py-2 transition">イベント</a>
                     </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white p-2 hover:text-purple-400 transition">
+                        <i id="hamburger-icon" class="fas fa-bars text-2xl"></i>
+                        <i id="close-icon" class="fas fa-times text-2xl hidden"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="hidden md:hidden bg-black bg-opacity-95 border-t border-gray-800">
+                <div class="px-4 py-3 space-y-1">
+                    <a href="/" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-home mr-2"></i>ホーム
+                    </a>
+                    <a href="/artists" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-users mr-2"></i>アーティスト
+                    </a>
+                    <a href="/events" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-calendar-alt mr-2"></i>イベント
+                    </a>
                 </div>
             </div>
         </nav>
+        <script src="/static/nav.js"></script>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div id="artist-detail">
@@ -538,25 +586,46 @@ app.get('/admin', (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
-        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800">
+        <nav class="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
                     <div class="flex items-center">
                         <i class="fas fa-broadcast-tower text-purple-500 text-2xl mr-3"></i>
-                        <a href="/" class="text-white text-xl font-bold">StreamingPlatform</a>
-                        <span class="ml-4 text-sm text-gray-400">管理画面</span>
+                        <a href="/" class="text-white text-xl font-bold hover:text-purple-400 transition">StreamingPlatform</a>
+                        <span class="hidden sm:inline ml-4 text-sm text-gray-400">管理画面</span>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2">
+                    
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 transition">
                             <i class="fas fa-home mr-1"></i>ホーム
                         </a>
-                        <button id="logout-btn" class="text-red-400 hover:text-red-300 px-3 py-2">
+                        <button id="logout-btn" class="text-red-400 hover:text-red-300 px-3 py-2 transition">
                             <i class="fas fa-sign-out-alt mr-1"></i>ログアウト
                         </button>
                     </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white p-2 hover:text-purple-400 transition">
+                        <i id="hamburger-icon" class="fas fa-bars text-2xl"></i>
+                        <i id="close-icon" class="fas fa-times text-2xl hidden"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="hidden md:hidden bg-black bg-opacity-95 border-t border-gray-800">
+                <div class="px-4 py-3 space-y-1">
+                    <a href="/" class="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-home mr-2"></i>ホーム
+                    </a>
+                    <button id="logout-btn-mobile" class="w-full text-left block text-red-400 hover:text-red-300 px-3 py-2 rounded hover:bg-gray-800 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>ログアウト
+                    </button>
                 </div>
             </div>
         </nav>
+        <script src="/static/nav.js"></script>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div id="login-section" class="hidden">
@@ -583,26 +652,26 @@ app.get('/admin', (c) => {
 
             <div id="admin-content" class="hidden">
                 <div class="mb-8">
-                    <h1 class="text-4xl font-bold text-white mb-4">
+                    <h1 class="text-2xl md:text-4xl font-bold text-white mb-4">
                         <i class="fas fa-tachometer-alt text-purple-500 mr-2"></i>
                         管理ダッシュボード
                     </h1>
                 </div>
 
                 <!-- Tabs -->
-                <div class="mb-6 border-b border-gray-800">
-                    <nav class="flex space-x-4">
-                        <button onclick="switchTab('stats')" class="tab-btn active px-4 py-2 text-white border-b-2 border-purple-500">
-                            <i class="fas fa-chart-line mr-2"></i>統計
+                <div class="mb-6 border-b border-gray-800 overflow-x-auto">
+                    <nav class="flex space-x-2 md:space-x-4 min-w-max">
+                        <button onclick="switchTab('stats')" class="tab-btn active px-3 md:px-4 py-2 text-sm md:text-base text-white border-b-2 border-purple-500 whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1 md:mr-2"></i>統計
                         </button>
-                        <button onclick="switchTab('events')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
-                            <i class="fas fa-calendar-alt mr-2"></i>イベント管理
+                        <button onclick="switchTab('events')" class="tab-btn px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap">
+                            <i class="fas fa-calendar-alt mr-1 md:mr-2"></i>イベント管理
                         </button>
-                        <button onclick="switchTab('artists')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
-                            <i class="fas fa-users mr-2"></i>アーティスト管理
+                        <button onclick="switchTab('artists')" class="tab-btn px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap">
+                            <i class="fas fa-users mr-1 md:mr-2"></i>アーティスト管理
                         </button>
-                        <button onclick="switchTab('purchases')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent">
-                            <i class="fas fa-receipt mr-2"></i>購入履歴
+                        <button onclick="switchTab('purchases')" class="tab-btn px-3 md:px-4 py-2 text-sm md:text-base text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap">
+                            <i class="fas fa-receipt mr-1 md:mr-2"></i>購入履歴
                         </button>
                     </nav>
                 </div>

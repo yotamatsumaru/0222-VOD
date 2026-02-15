@@ -56,6 +56,13 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     checkAuth();
 });
 
+// Logout (mobile)
+document.getElementById('logout-btn-mobile')?.addEventListener('click', () => {
+    localStorage.removeItem('admin_auth');
+    authToken = null;
+    checkAuth();
+});
+
 // API helper with auth
 async function adminAPI(method, url, data = null) {
     const config = {
