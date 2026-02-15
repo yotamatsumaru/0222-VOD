@@ -27,16 +27,25 @@ events.get('/', async (c) => {
     
     const eventsList = await db.getEvents(filters);
     
-    // Get artist info for each event
-    const eventsWithArtists = await Promise.all(
-      eventsList.map(async (event) => {
-        const artist = await db.getArtistBySlug(''); // We need artist by ID
-        // For now, return event as-is
-        return event;
-      })
-    );
+    // Sort events: live first, then upcoming, then others by start_time
+    const sortedEvents = eventsList.sort((a, b) => {
+      // Priority 1: Live events first
+      if (a.status === 'live' && b.status !== 'live') return -1;
+      if (a.status !== 'live' && b.status === 'live') return 1;
+      
+      // Priority 2: Upcoming events
+      if (a.status === 'upcoming' && b.status !== 'upcoming') return -1;
+      if (a.status !== 'upcoming' && b.status === 'upcoming') return 1;
+      
+      // Priority 3: Sort by start_time (earliest first)
+      if (a.start_time && b.start_time) {
+        return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+      }
+      
+      return 0;
+    });
     
-    return c.json(eventsWithArtists);
+    return c.json(sortedEvents);
   } catch (error: any) {
     console.error('Get events error:', error);
     return c.json({ error: 'Failed to get events', details: error.message }, 500);

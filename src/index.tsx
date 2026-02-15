@@ -144,11 +144,15 @@ app.get('/', (c) => {
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script>
-            // Load upcoming events
+            // Load upcoming and live events
             async function loadEvents() {
                 try {
-                    const response = await axios.get('/api/events?status=upcoming');
-                    const events = response.data;
+                    // Get all events and filter on frontend
+                    const response = await axios.get('/api/events');
+                    const allEvents = response.data;
+                    
+                    // Filter to show only live and upcoming events
+                    const events = allEvents.filter(e => e.status === 'live' || e.status === 'upcoming');
                     
                     const eventsContainer = document.getElementById('events-list');
                     
@@ -162,15 +166,34 @@ app.get('/', (c) => {
                         return;
                     }
                     
-                    eventsContainer.innerHTML = events.map(event => \`
-                        <a href="/events/\${event.slug}" class="block bg-black bg-opacity-40 backdrop-blur-md rounded-xl overflow-hidden border border-gray-800 hover:border-purple-500 transition">
+                    // Sort events: live first, then by start_time
+                    const sortedEvents = events.sort((a, b) => {
+                        // Live events first
+                        if (a.status === 'live' && b.status !== 'live') return -1;
+                        if (a.status !== 'live' && b.status === 'live') return 1;
+                        
+                        // Then sort by start_time
+                        if (a.start_time && b.start_time) {
+                            return new Date(a.start_time) - new Date(b.start_time);
+                        }
+                        return 0;
+                    });
+                    
+                    eventsContainer.innerHTML = sortedEvents.map(event => {
+                        const isLive = event.status === 'live';
+                        const badgeColor = isLive ? 'bg-red-600 animate-pulse' : 'bg-blue-600';
+                        const badgeText = isLive ? 'LIVE' : 'UPCOMING';
+                        const borderClass = isLive ? 'border-red-500 ring-2 ring-red-500/50' : 'border-gray-800 hover:border-purple-500';
+                        
+                        return \`
+                        <a href="/events/\${event.slug}" class="block bg-black bg-opacity-40 backdrop-blur-md rounded-xl overflow-hidden border \${borderClass} transition">
                             <div class="aspect-video bg-gray-800 relative">
                                 <img src="\${event.thumbnail_url || 'https://via.placeholder.com/800x450'}" 
                                      alt="\${event.title}" 
                                      class="w-full h-full object-cover">
-                                <div class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                    <i class="fas fa-circle animate-pulse mr-1"></i>
-                                    UPCOMING
+                                <div class="\${badgeColor} text-white px-3 py-1 rounded-full text-sm font-bold absolute top-2 right-2">
+                                    \${isLive ? '<i class="fas fa-circle mr-1"></i>' : ''}
+                                    \${badgeText}
                                 </div>
                             </div>
                             <div class="p-4">
@@ -182,7 +205,8 @@ app.get('/', (c) => {
                                 <p class="text-gray-500 text-sm line-clamp-2">\${event.description || ''}</p>
                             </div>
                         </a>
-                    \`).join('');
+                    \`;
+                    }).join('');
                 } catch (error) {
                     console.error('Failed to load events:', error);
                     document.getElementById('events-list').innerHTML = \`
