@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/artists/[slug]/route": "app/api/artists/[slug]/route.js",
+  "/api/artists/route": "app/api/artists/route.js",
+  "/api/events/[slug]/route": "app/api/events/[slug]/route.js",
+  "/api/events/[slug]/tickets/route": "app/api/events/[slug]/tickets/route.js",
+  "/api/events/route": "app/api/events/route.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/api/purchases/[sessionId]/route": "app/api/purchases/[sessionId]/route.js",
+  "/api/stripe/checkout/route": "app/api/stripe/checkout/route.js",
+  "/api/stripe/webhook/route": "app/api/stripe/webhook/route.js",
+  "/api/watch/stream-url/route": "app/api/watch/stream-url/route.js",
+  "/api/watch/verify/route": "app/api/watch/verify/route.js",
+  "/artists/[slug]/page": "app/artists/[slug]/page.js",
+  "/artists/page": "app/artists/page.js",
+  "/events/[slug]/page": "app/events/[slug]/page.js",
+  "/events/page": "app/events/page.js",
+  "/page": "app/page.js",
+  "/success/page": "app/success/page.js",
+  "/watch/[slug]/page": "app/watch/[slug]/page.js"
+}

@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/artists/[slug]/route": "/api/artists/[slug]",
+  "/api/artists/route": "/api/artists",
+  "/api/events/[slug]/route": "/api/events/[slug]",
+  "/api/events/[slug]/tickets/route": "/api/events/[slug]/tickets",
+  "/api/events/route": "/api/events",
+  "/api/health/route": "/api/health",
+  "/api/purchases/[sessionId]/route": "/api/purchases/[sessionId]",
+  "/api/stripe/checkout/route": "/api/stripe/checkout",
+  "/api/stripe/webhook/route": "/api/stripe/webhook",
+  "/api/watch/stream-url/route": "/api/watch/stream-url",
+  "/api/watch/verify/route": "/api/watch/verify",
+  "/artists/[slug]/page": "/artists/[slug]",
+  "/artists/page": "/artists",
+  "/events/[slug]/page": "/events/[slug]",
+  "/events/page": "/events",
+  "/page": "/",
+  "/success/page": "/success",
+  "/watch/[slug]/page": "/watch/[slug]"
+}
