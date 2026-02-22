@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
-import { Database } from '../lib/db';
 import { verifyAccessToken } from '../lib/auth';
 import { generateSignedUrl, generateSignedCookies } from '../lib/cloudfront';
 
@@ -13,8 +12,10 @@ watch.post('/verify', async (c) => {
     
     // Preview mode (development only - bypass authentication)
     if (preview === true && eventSlug) {
-      const db = new Database(c.env.DB);
-      const event = await db.getEventBySlug(eventSlug);
+      const db = c.env.DB;
+      const event = await db.prepare(
+        'SELECT * FROM events WHERE slug = $1'
+      ).bind(eventSlug).first();
       
       if (!event) {
         return c.json({ error: 'Event not found' }, 404);
@@ -38,8 +39,10 @@ watch.post('/verify', async (c) => {
       return c.json({ error: 'Token required' }, 400);
     }
 
-    const db = new Database(c.env.DB);
-    const purchase = await db.getPurchaseByAccessToken(token);
+    const db = c.env.DB;
+    const purchase = await db.prepare(
+      'SELECT * FROM purchases WHERE access_token = $1'
+    ).bind(token).first();
 
     if (!purchase) {
       return c.json({ error: 'Invalid or expired token' }, 401);
@@ -96,7 +99,9 @@ watch.post('/stream-url', async (c) => {
     
     // Preview mode (development only)
     if (preview === true && eventSlug) {
-      const event = await db.getEventBySlug(eventSlug);
+      const event = await db.prepare(
+        'SELECT * FROM events WHERE slug = $1'
+      ).bind(eventSlug).first();
       if (!event) {
         return c.json({ error: 'Event not found' }, 404);
       }
@@ -125,7 +130,9 @@ watch.post('/stream-url', async (c) => {
     }
 
     // Get event
-    const event = await db.getEventById(eventId);
+    const event = await db.prepare(
+      'SELECT * FROM events WHERE id = $1'
+    ).bind(eventId).first();
     if (!event) {
       return c.json({ error: 'Event not found' }, 404);
     }
@@ -182,7 +189,9 @@ watch.post('/stream-cookies', async (c) => {
     }
 
     // Get event
-    const event = await db.getEventById(eventId);
+    const event = await db.prepare(
+      'SELECT * FROM events WHERE id = $1'
+    ).bind(eventId).first();
     if (!event) {
       return c.json({ error: 'Event not found' }, 404);
     }
