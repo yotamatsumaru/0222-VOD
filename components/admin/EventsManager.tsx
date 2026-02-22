@@ -11,6 +11,11 @@ interface Event {
   artist_name: string;
 }
 
+interface Artist {
+  id: number;
+  name: string;
+}
+
 export default function EventsManager() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,7 +220,6 @@ export default function EventsManager() {
   );
 }
 
-// Simple form modal (placeholder - full implementation would be more complex)
 function EventFormModal({
   event,
   onClose,
@@ -225,23 +229,292 @@ function EventFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [formData, setFormData] = useState({
+    title: event?.title || '',
+    slug: event?.slug || '',
+    artist_id: '',
+    description: '',
+    thumbnail_url: '',
+    event_type: 'live',
+    stream_url: '',
+    archive_url: '',
+    start_time: event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '',
+    end_time: '',
+    status: event?.status || 'upcoming',
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchArtists();
+  }, []);
+
+  const fetchArtists = async () => {
+    try {
+      const credentials = sessionStorage.getItem('admin_credentials');
+      const response = await fetch('/api/admin/artists', {
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
+      });
+      const data = await response.json();
+      setArtists(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch artists:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const credentials = sessionStorage.getItem('admin_credentials');
+      const url = event 
+        ? `/api/admin/events/${event.id}`
+        : '/api/admin/events';
+      
+      const method = event ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${credentials}`
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        alert(event ? 'イベントを更新しました' : 'イベントを作成しました');
+        onSuccess();
+      } else {
+        const error = await response.json();
+        alert(`エラー: ${error.message || '保存に失敗しました'}`);
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      alert('保存に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      // タイトルからslugを自動生成
+      ...(name === 'title' && !event ? { slug: value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') } : {})
+    }));
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-2xl font-bold text-white mb-4">
+      <div className="bg-gray-900 rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-2xl font-bold text-white mb-6">
+          <i className="fas fa-calendar-alt text-purple-500 mr-2"></i>
           {event ? 'イベント編集' : '新規イベント作成'}
         </h3>
-        <p className="text-gray-400 mb-4">
-          イベントフォームの完全な実装が必要です
-        </p>
-        <div className="flex justify-end space-x-4">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-          >
-            キャンセル
-          </button>
-        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                タイトル <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="イベント名を入力"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                スラッグ <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="slug"
+                value={formData.slug}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="event-slug"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              アーティスト <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="artist_id"
+              value={formData.artist_id}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="">アーティストを選択</option>
+              {artists.map(artist => (
+                <option key={artist.id} value={artist.id}>{artist.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              説明
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="イベントの説明を入力"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                イベント種別
+              </label>
+              <select
+                name="event_type"
+                value={formData.event_type}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="live">ライブ配信</option>
+                <option value="archive">アーカイブ</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                ステータス
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="upcoming">配信予定</option>
+                <option value="live">配信中</option>
+                <option value="ended">終了</option>
+                <option value="archived">アーカイブ</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              サムネイルURL
+            </label>
+            <input
+              type="url"
+              name="thumbnail_url"
+              value={formData.thumbnail_url}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              ストリームURL
+            </label>
+            <input
+              type="url"
+              name="stream_url"
+              value={formData.stream_url}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="https://cloudfront.net/stream.m3u8"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              アーカイブURL
+            </label>
+            <input
+              type="url"
+              name="archive_url"
+              value={formData.archive_url}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="https://cloudfront.net/archive.m3u8"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                開始日時 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                name="start_time"
+                value={formData.start_time}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                終了日時
+              </label>
+              <input
+                type="datetime-local"
+                name="end_time"
+                value={formData.end_time}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+            >
+              キャンセル
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin mr-2"></i>
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save mr-2"></i>
+                  {event ? '更新' : '作成'}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
