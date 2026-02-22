@@ -37,7 +37,8 @@ export default function AdminPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/stats', {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
         headers: {
           'Authorization': 'Basic ' + btoa(`${username}:${password}`)
         }
@@ -49,7 +50,7 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         fetchStats();
       } else {
-        setError('認証に失敗しました');
+        setError('認証に失敗しました。ユーザー名とパスワードを確認してください。');
       }
     } catch (err) {
       setError('ログインエラーが発生しました');
