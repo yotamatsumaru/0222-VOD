@@ -178,7 +178,8 @@ npm install
 `.env.local` ファイルを作成（`.env.example` を参考に）:
 
 ```bash
-# Database
+# Database (RDS for Production, localhost for Development)
+# RDS: postgresql://user:password@rds-endpoint.rds.amazonaws.com:5432/streaming_platform
 DATABASE_URL=postgresql://username:password@localhost:5432/streaming_platform
 
 # Stripe
@@ -202,6 +203,9 @@ CLOUDFRONT_DOMAIN=your_cloudfront_domain.cloudfront.net
 # App URL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+> **AWS RDS を使用する場合**  
+> 詳細な設定手順は [RDS_SETUP.md](./RDS_SETUP.md) を参照してください。
 
 ### 3. データベースのセットアップ
 
@@ -330,11 +334,16 @@ vercel --prod
 
 ### AWS EC2 へのデプロイ
 
-1. PostgreSQL のセットアップ
+1. PostgreSQL のセットアップ（ローカルDB）または AWS RDS の使用
 2. Node.js のインストール
 3. プロジェクトのクローンとビルド
 4. PM2 または systemd でサービス化
 5. Nginx でリバースプロキシ設定
+
+> **AWS RDS を使用する場合**  
+> 詳細な設定手順は [RDS_SETUP.md](./RDS_SETUP.md) を参照してください。
+
+**詳細な手順**は [AWS_DEPLOYMENT.md](./AWS_DEPLOYMENT.md) を参照してください。
 
 ## 🔧 トラブルシューティング
 
