@@ -37,12 +37,17 @@ async function postHandler(request: NextRequest) {
       endTime,
     } = body;
 
+    console.log('POST /api/admin/events - Request body:', body);
+
     if (!artistId || !title || !slug) {
+      console.error('POST /api/admin/events - Missing required fields:', { artistId, title, slug });
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: artistId, title, and slug are required' },
         { status: 400 }
       );
     }
+
+    console.log('POST /api/admin/events - Inserting event into database...');
 
     const event = await insert(
       `INSERT INTO events (
@@ -64,17 +69,29 @@ async function postHandler(request: NextRequest) {
       ]
     );
 
+    console.log('POST /api/admin/events - Event created successfully:', event);
+
     return NextResponse.json(event, { status: 201 });
   } catch (error: any) {
-    console.error('Create event error:', error);
+    console.error('POST /api/admin/events - Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+    
     if (error.code === '23505') {
       return NextResponse.json(
         { error: 'Event with this slug already exists' },
         { status: 409 }
       );
     }
+    
     return NextResponse.json(
-      { error: 'Failed to create event' },
+      { 
+        error: 'Failed to create event',
+        details: error.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }

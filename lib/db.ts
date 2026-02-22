@@ -4,11 +4,29 @@ let pool: Pool | null = null;
 
 export function getDatabase(): Pool {
   if (!pool) {
+    const connectionString = process.env.DATABASE_URL;
+    
+    if (!connectionString) {
+      console.error('DATABASE_URL is not defined in environment variables');
+      throw new Error('DATABASE_URL is not configured');
+    }
+    
+    console.log('Initializing database connection pool...');
+    console.log('Database URL format:', connectionString.replace(/:[^:@]+@/, ':****@')); // Hide password
+    
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 5000, // Increased from 2000ms to 5000ms
+    });
+
+    pool.on('error', (err) => {
+      console.error('Unexpected error on idle client', err);
+    });
+
+    pool.on('connect', () => {
+      console.log('Database connection established');
     });
   }
   return pool;
@@ -19,7 +37,22 @@ export async function query<T extends QueryResultRow = any>(
   params?: any[]
 ): Promise<QueryResult<T>> {
   const db = getDatabase();
-  return db.query<T>(text, params);
+  try {
+    const start = Date.now();
+    const result = await db.query<T>(text, params);
+    const duration = Date.now() - start;
+    console.log('Query executed:', { sql: text.substring(0, 100), duration: `${duration}ms`, rows: result.rowCount });
+    return result;
+  } catch (error: any) {
+    console.error('Database query error:', {
+      sql: text.substring(0, 200),
+      params,
+      error: error.message,
+      code: error.code,
+      detail: error.detail
+    });
+    throw error;
+  }
 }
 
 export async function getOne<T extends QueryResultRow = any>(

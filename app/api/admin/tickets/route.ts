@@ -26,12 +26,17 @@ async function postHandler(request: NextRequest) {
     const body = await request.json();
     const { eventId, name, description, price, currency, stock, isActive } = body;
 
+    console.log('POST /api/admin/tickets - Request body:', body);
+
     if (!eventId || !name || price === undefined) {
+      console.error('POST /api/admin/tickets - Missing required fields:', { eventId, name, price });
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: eventId, name, and price are required' },
         { status: 400 }
       );
     }
+
+    console.log('POST /api/admin/tickets - Inserting ticket into database...');
 
     const ticket = await insert(
       `INSERT INTO tickets (event_id, name, description, price, currency, stock, sold, is_active)
@@ -48,11 +53,22 @@ async function postHandler(request: NextRequest) {
       ]
     );
 
+    console.log('POST /api/admin/tickets - Ticket created successfully:', ticket);
+
     return NextResponse.json(ticket, { status: 201 });
-  } catch (error) {
-    console.error('Create ticket error:', error);
+  } catch (error: any) {
+    console.error('POST /api/admin/tickets - Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+    
     return NextResponse.json(
-      { error: 'Failed to create ticket' },
+      { 
+        error: 'Failed to create ticket',
+        details: error.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }
