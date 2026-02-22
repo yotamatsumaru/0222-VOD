@@ -216,6 +216,9 @@ npm run db:migrate
 npm run db:seed
 ```
 
+> **⚠️ データベース接続エラーが発生する場合**  
+> 詳細なセットアップ手順は [DATABASE_SETUP.md](./DATABASE_SETUP.md) を参照してください。
+
 ### 4. 開発サーバーの起動
 
 ```bash
@@ -343,9 +346,19 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### データベースエラー
+### データベースエラー（ECONNREFUSED）
+
+**症状**: 管理画面やAPIで500エラーが発生し、`ECONNREFUSED` エラーが表示される
+
+**原因**: PostgreSQLデータベースに接続できていない
+
+**解決方法**: [DATABASE_SETUP.md](./DATABASE_SETUP.md) の詳細な手順を参照してください
 
 ```bash
+# 簡易チェック
+sudo systemctl status postgresql
+psql -U streaming_user -d streaming_platform -h localhost -c "SELECT 1;"
+
 # データベースをリセット
 dropdb streaming_platform
 createdb streaming_platform
