@@ -36,11 +36,18 @@ AWS・Stripe・Next.jsを使用したライブ配信・ストリーミング基�
    - セキュアな配信URLの生成
    - DRM保護対応の準備
 
+7. **管理画面**
+   - Basic認証によるログイン
+   - ダッシュボード（売上統計・購入数）
+   - イベント管理（CRUD操作、ステータス更新）
+   - アーティスト管理（CRUD操作）
+   - チケット管理（CRUD操作）
+   - 購入履歴確認
+
 ### 🚧 今後の拡張予定
 
-1. **管理画面** - イベント・アーティスト・チケットの管理機能
-2. **メール通知** - 購入確認メール、視聴URL送信
-3. **ユーザーマイページ** - 購入履歴、チケット管理
+1. **メール通知** - 購入確認メール、視聴URL送信
+2. **ユーザーマイページ** - 購入履歴、チケット管理
 
 ## 📁 プロジェクト構造
 
@@ -53,7 +60,8 @@ webapp/
 │   │   ├── artists/
 │   │   ├── stripe/
 │   │   ├── watch/
-│   │   └── purchases/
+│   │   ├── purchases/
+│   │   └── admin/          # 管理画面API
 │   ├── events/
 │   │   └── [slug]/
 │   ├── artists/
@@ -61,6 +69,7 @@ webapp/
 │   ├── watch/
 │   │   └── [slug]/
 │   ├── success/
+│   ├── admin/              # 管理画面ページ
 │   ├── layout.tsx
 │   ├── page.tsx
 │   └── globals.css
@@ -69,11 +78,18 @@ webapp/
 │   ├── EventCard.tsx
 │   ├── TicketPurchase.tsx
 │   ├── WatchPlayer.tsx
-│   └── SuccessContent.tsx
+│   ├── SuccessContent.tsx
+│   └── admin/              # 管理画面コンポーネント
+│       ├── Dashboard.tsx
+│       ├── EventsManager.tsx
+│       ├── ArtistsManager.tsx
+│       ├── TicketsManager.tsx
+│       └── PurchasesView.tsx
 ├── lib/
 │   ├── db.ts
 │   ├── stripe.ts
 │   ├── auth.ts
+│   ├── adminAuth.ts        # 管理画面認証
 │   ├── cloudfront.ts
 │   └── types.ts
 ├── prisma/
@@ -125,6 +141,28 @@ webapp/
 ### 購入情報 API
 
 - `GET /api/purchases/[sessionId]` - 購入詳細取得
+
+### 管理画面 API
+
+- `GET /api/admin/stats` - 統計情報取得（総売上、購入数など）
+- `GET /api/admin/events` - イベント一覧取得
+- `POST /api/admin/events` - イベント作成
+- `GET /api/admin/events/[id]` - イベント詳細取得
+- `PATCH /api/admin/events/[id]` - イベント更新
+- `DELETE /api/admin/events/[id]` - イベント削除
+- `GET /api/admin/artists` - アーティスト一覧取得
+- `POST /api/admin/artists` - アーティスト作成
+- `GET /api/admin/artists/[id]` - アーティスト詳細取得
+- `PATCH /api/admin/artists/[id]` - アーティスト更新
+- `DELETE /api/admin/artists/[id]` - アーティスト削除
+- `GET /api/admin/tickets` - チケット一覧取得
+- `POST /api/admin/tickets` - チケット作成
+- `GET /api/admin/tickets/[id]` - チケット詳細取得
+- `PATCH /api/admin/tickets/[id]` - チケット更新
+- `DELETE /api/admin/tickets/[id]` - チケット削除
+- `GET /api/admin/purchases` - 購入履歴一覧取得
+
+> **注意**: すべての管理画面APIはBasic認証が必要です
 
 ## ⚙️ セットアップ手順
 
@@ -220,6 +258,16 @@ Stripe テストモードで使用できるカード:
 2. **チケット購入**: イベント詳細ページでチケットを選択して購入
 3. **決済**: Stripe Checkout で安全に決済
 4. **視聴**: 購入完了後、アクセストークンを使って視聴ページにアクセス
+
+### 管理者フロー
+
+1. **管理画面にアクセス**: `https://your-domain.com/admin`
+2. **ログイン**: Basic認証で管理者ログイン
+3. **ダッシュボード**: 売上統計や購入数を確認
+4. **イベント管理**: イベントの作成、編集、削除、ステータス変更
+5. **アーティスト管理**: アーティストの追加・編集
+6. **チケット管理**: チケット種別の設定・在庫管理
+7. **購入履歴**: すべての購入情報を確認
 
 ### AWS 配信環境との連携
 
