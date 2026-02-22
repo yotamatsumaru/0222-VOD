@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
-import { Database } from '../lib/db';
 
 const events = new Hono<{ Bindings: Bindings }>();
 
@@ -10,22 +9,37 @@ events.get('/', async (c) => {
     const artistSlug = c.req.query('artist');
     const status = c.req.query('status');
     
-    const db = new Database(c.env.DB);
+    const db = c.env.DB;
     
-    let filters: any = {};
+    let query = 'SELECT * FROM events';
+    const params: any[] = [];
+    const conditions: string[] = [];
     
     if (artistSlug) {
-      const artist = await db.getArtistBySlug(artistSlug);
-      if (artist) {
-        filters.artistId = artist.id;
+      // Get artist ID by slug
+      const artistResult = await db.prepare(
+        'SELECT id FROM artists WHERE slug = $1'
+      ).bind(artistSlug).first<{ id: number }>();
+      
+      if (artistResult) {
+        conditions.push('artist_id = $' + (params.length + 1));
+        params.push(artistResult.id);
       }
     }
     
     if (status) {
-      filters.status = status;
+      conditions.push('status = $' + (params.length + 1));
+      params.push(status);
     }
     
-    const eventsList = await db.getEvents(filters);
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    query += ' ORDER BY start_time ASC';
+    
+    const result = await db.prepare(query).bind(...params).all();
+    const eventsList = result.results || [];
     
     // Sort events: live first, then upcoming, then others by start_time
     const sortedEvents = eventsList.sort((a, b) => {
@@ -56,19 +70,24 @@ events.get('/', async (c) => {
 events.get('/:slug', async (c) => {
   try {
     const slug = c.req.param('slug');
-    const db = new Database(c.env.DB);
+    const db = c.env.DB;
     
-    const event = await db.getEventBySlug(slug);
+    const event = await db.prepare(
+      'SELECT * FROM events WHERE slug = $1'
+    ).bind(slug).first();
+    
     if (!event) {
       return c.json({ error: 'Event not found' }, 404);
     }
     
     // Get tickets for this event
-    const tickets = await db.getTicketsByEventId(event.id);
+    const ticketsResult = await db.prepare(
+      'SELECT * FROM tickets WHERE event_id = $1 AND is_active = true'
+    ).bind(event.id).all();
     
     return c.json({
       ...event,
-      tickets,
+      tickets: ticketsResult.results || [],
     });
   } catch (error: any) {
     console.error('Get event error:', error);
@@ -80,16 +99,21 @@ events.get('/:slug', async (c) => {
 events.get('/:slug/tickets', async (c) => {
   try {
     const slug = c.req.param('slug');
-    const db = new Database(c.env.DB);
+    const db = c.env.DB;
     
-    const event = await db.getEventBySlug(slug);
+    const event = await db.prepare(
+      'SELECT * FROM events WHERE slug = $1'
+    ).bind(slug).first();
+    
     if (!event) {
       return c.json({ error: 'Event not found' }, 404);
     }
     
-    const tickets = await db.getTicketsByEventId(event.id);
+    const ticketsResult = await db.prepare(
+      'SELECT * FROM tickets WHERE event_id = $1 AND is_active = true'
+    ).bind(event.id).all();
     
-    return c.json(tickets);
+    return c.json(ticketsResult.results || []);
   } catch (error: any) {
     console.error('Get tickets error:', error);
     return c.json({ error: 'Failed to get tickets', details: error.message }, 500);
