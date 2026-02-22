@@ -14,14 +14,17 @@ export function getDatabase(): Pool {
     console.log('Initializing database connection pool...');
     console.log('Database URL format:', connectionString.replace(/:[^:@]+@/, ':****@')); // Hide password
     
+    // SSL設定: RDSは自己署名証明書を使用するため rejectUnauthorized: false
+    const sslConfig = {
+      rejectUnauthorized: false // RDSの自己署名証明書を許可
+    };
+    
     pool = new Pool({
       connectionString,
-      ssl: {
-        rejectUnauthorized: false // RDS requires SSL but we don't verify the certificate
-      },
+      ssl: sslConfig,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000, // Increased from 2000ms to 5000ms
+      connectionTimeoutMillis: 5000,
     });
 
     pool.on('error', (err) => {
