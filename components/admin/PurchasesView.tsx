@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Purchase {
   id: number;
@@ -30,7 +31,7 @@ export default function PurchasesView() {
   const fetchPurchases = async () => {
     try {
       setLoading(true);
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/purchases', {
         headers: {
           'Authorization': `Basic ${credentials}`

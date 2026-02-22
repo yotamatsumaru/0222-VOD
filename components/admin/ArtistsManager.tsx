@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Artist {
   id: number;
@@ -22,7 +23,7 @@ export default function ArtistsManager() {
 
   const fetchArtists = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/artists', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -47,7 +48,7 @@ export default function ArtistsManager() {
     if (!confirm('このアーティストを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch(`/api/admin/artists/${id}`, {
         method: 'DELETE',
         headers: {
@@ -186,7 +187,7 @@ function ArtistFormModal({
     setLoading(true);
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const url = artist 
         ? `/api/admin/artists/${artist.id}`
         : '/api/admin/artists';

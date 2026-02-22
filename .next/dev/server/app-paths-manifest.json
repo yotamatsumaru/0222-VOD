@@ -1,5 +1,10 @@
 {
-  "/artists/page": "app/artists/page.js",
-  "/events/page": "app/events/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/artists/route": "app/api/admin/artists/route.js",
+  "/api/admin/auth/route": "app/api/admin/auth/route.js",
+  "/api/admin/events/route": "app/api/admin/events/route.js",
+  "/api/admin/purchases/route": "app/api/admin/purchases/route.js",
+  "/api/admin/stats/route": "app/api/admin/stats/route.js",
+  "/api/admin/tickets/route": "app/api/admin/tickets/route.js",
   "/page": "app/page.js"
 }

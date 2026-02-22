@@ -5,6 +5,12 @@ import EventsManager from '@/components/admin/EventsManager';
 import ArtistsManager from '@/components/admin/ArtistsManager';
 import TicketsManager from '@/components/admin/TicketsManager';
 import PurchasesView from '@/components/admin/PurchasesView';
+import { 
+  isAdminAuthenticated, 
+  setAdminAuthenticated, 
+  setAdminCredentials,
+  getAdminCredentials 
+} from '@/lib/adminStorage';
 
 interface Stats {
   totalSales: number;
@@ -23,9 +29,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    // Check if already authenticated (from sessionStorage)
-    const authenticated = sessionStorage.getItem('admin_authenticated');
-    if (authenticated === 'true') {
+    // Check if already authenticated
+    if (isAdminAuthenticated()) {
       setIsAuthenticated(true);
       fetchStats();
     }
@@ -37,22 +42,24 @@ export default function AdminPage() {
     setLoading(true);
 
     try {
+      const credentials = btoa(`${username}:${password}`);
       const response = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: {
-          'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+          'Authorization': `Basic ${credentials}`
         }
       });
 
       if (response.ok) {
-        sessionStorage.setItem('admin_authenticated', 'true');
-        sessionStorage.setItem('admin_credentials', btoa(`${username}:${password}`));
+        setAdminAuthenticated(true);
+        setAdminCredentials(credentials);
         setIsAuthenticated(true);
         fetchStats();
       } else {
         setError('認証に失敗しました。ユーザー名とパスワードを確認してください。');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('ログインエラーが発生しました');
     } finally {
       setLoading(false);
@@ -60,8 +67,7 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('admin_authenticated');
-    sessionStorage.removeItem('admin_credentials');
+    setAdminAuthenticated(false);
     setIsAuthenticated(false);
     setUsername('');
     setPassword('');
@@ -69,7 +75,12 @@ export default function AdminPage() {
 
   const fetchStats = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
+      if (!credentials) {
+        setError('認証情報が見つかりません');
+        return;
+      }
+      
       const response = await fetch('/api/admin/stats', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -79,6 +90,8 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+      } else {
+        console.error('Failed to fetch stats');
       }
     } catch (err) {
       console.error('Failed to fetch stats:', err);

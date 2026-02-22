@@ -22,6 +22,30 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/admin/artists/[id]",
+      "regex": "^/api/admin/artists/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/artists/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/events/[id]",
+      "regex": "^/api/admin/events/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/events/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/tickets/[id]",
+      "regex": "^/api/admin/tickets/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/tickets/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/artists/[slug]",
       "regex": "^/api/artists/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -96,6 +120,42 @@
       "regex": "^/_not\\-found(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/api/admin/artists",
+      "regex": "^/api/admin/artists(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/artists(?:/)?$"
+    },
+    {
+      "page": "/api/admin/events",
+      "regex": "^/api/admin/events(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/events(?:/)?$"
+    },
+    {
+      "page": "/api/admin/purchases",
+      "regex": "^/api/admin/purchases(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/purchases(?:/)?$"
+    },
+    {
+      "page": "/api/admin/stats",
+      "regex": "^/api/admin/stats(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/stats(?:/)?$"
+    },
+    {
+      "page": "/api/admin/tickets",
+      "regex": "^/api/admin/tickets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/tickets(?:/)?$"
     },
     {
       "page": "/api/artists",

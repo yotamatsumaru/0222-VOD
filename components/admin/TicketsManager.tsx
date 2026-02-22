@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Ticket {
   id: number;
@@ -31,7 +32,7 @@ export default function TicketsManager() {
 
   const fetchTickets = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/tickets', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -56,7 +57,7 @@ export default function TicketsManager() {
     if (!confirm('このチケットを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'DELETE',
         headers: {
@@ -77,7 +78,7 @@ export default function TicketsManager() {
 
   const toggleActive = async (id: number, currentStatus: boolean) => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'PATCH',
         headers: { 
@@ -244,7 +245,7 @@ function TicketFormModal({
 
   const fetchEvents = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/events', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -262,7 +263,7 @@ function TicketFormModal({
     setLoading(true);
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const url = ticket 
         ? `/api/admin/tickets/${ticket.id}`
         : '/api/admin/tickets';

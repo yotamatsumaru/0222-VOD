@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Event {
   id: number;
@@ -28,7 +29,7 @@ export default function EventsManager() {
 
   const fetchEvents = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/events', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -53,7 +54,7 @@ export default function EventsManager() {
     if (!confirm('このイベントを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'DELETE',
         headers: {
@@ -74,7 +75,7 @@ export default function EventsManager() {
 
   const handleStatusUpdate = async (id: number, newStatus: string) => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
         headers: { 
@@ -251,7 +252,7 @@ function EventFormModal({
 
   const fetchArtists = async () => {
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const response = await fetch('/api/admin/artists', {
         headers: {
           'Authorization': `Basic ${credentials}`
@@ -269,7 +270,7 @@ function EventFormModal({
     setLoading(true);
 
     try {
-      const credentials = sessionStorage.getItem('admin_credentials');
+      const credentials = getAdminCredentials();
       const url = event 
         ? `/api/admin/events/${event.id}`
         : '/api/admin/events';
