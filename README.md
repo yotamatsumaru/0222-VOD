@@ -317,6 +317,10 @@ WHERE id = 1;
 
 ## 🚀 デプロイ
 
+### クイックスタート（EC2 + RDS）
+
+EC2とRDSを使用した構成の場合は、[QUICK_START_RDS.md](./QUICK_START_RDS.md) を参照してください。
+
 ### Vercel へのデプロイ
 
 ```bash
