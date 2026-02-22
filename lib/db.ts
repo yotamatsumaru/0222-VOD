@@ -16,6 +16,9 @@ export function getDatabase(): Pool {
     
     pool = new Pool({
       connectionString,
+      ssl: {
+        rejectUnauthorized: false // RDS requires SSL but we don't verify the certificate
+      },
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000, // Increased from 2000ms to 5000ms

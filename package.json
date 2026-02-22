@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "psql $DATABASE_URL -f prisma/migrations/0001_initial_schema.sql",
-    "db:seed": "psql $DATABASE_URL -f prisma/seed.sql",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
     "db:console": "psql $DATABASE_URL"
   },
   "dependencies": {
