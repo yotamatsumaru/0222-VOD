@@ -20,11 +20,22 @@ export default function ArtistsManager() {
 
   const fetchArtists = async () => {
     try {
-      const response = await fetch('/api/admin/artists');
+      const credentials = sessionStorage.getItem('admin_credentials');
+      const response = await fetch('/api/admin/artists', {
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch artists');
+      }
+      
       const data = await response.json();
-      setArtists(data);
+      setArtists(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch artists:', error);
+      setArtists([]);
     } finally {
       setLoading(false);
     }
@@ -34,8 +45,12 @@ export default function ArtistsManager() {
     if (!confirm('このアーティストを削除してもよろしいですか？')) return;
 
     try {
+      const credentials = sessionStorage.getItem('admin_credentials');
       const response = await fetch(`/api/admin/artists/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
       });
 
       if (response.ok) {

@@ -23,11 +23,22 @@ export default function TicketsManager() {
 
   const fetchTickets = async () => {
     try {
-      const response = await fetch('/api/admin/tickets');
+      const credentials = sessionStorage.getItem('admin_credentials');
+      const response = await fetch('/api/admin/tickets', {
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tickets');
+      }
+      
       const data = await response.json();
-      setTickets(data);
+      setTickets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
+      setTickets([]);
     } finally {
       setLoading(false);
     }
@@ -37,8 +48,12 @@ export default function TicketsManager() {
     if (!confirm('このチケットを削除してもよろしいですか？')) return;
 
     try {
+      const credentials = sessionStorage.getItem('admin_credentials');
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
       });
 
       if (response.ok) {
@@ -54,9 +69,13 @@ export default function TicketsManager() {
 
   const toggleActive = async (id: number, currentStatus: boolean) => {
     try {
+      const credentials = sessionStorage.getItem('admin_credentials');
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${credentials}`
+        },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
 

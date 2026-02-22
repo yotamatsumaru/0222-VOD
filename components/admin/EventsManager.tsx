@@ -23,11 +23,22 @@ export default function EventsManager() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('/api/admin/events');
+      const credentials = sessionStorage.getItem('admin_credentials');
+      const response = await fetch('/api/admin/events', {
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
       const data = await response.json();
-      setEvents(data);
+      setEvents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -37,8 +48,12 @@ export default function EventsManager() {
     if (!confirm('このイベントを削除してもよろしいですか？')) return;
 
     try {
+      const credentials = sessionStorage.getItem('admin_credentials');
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
       });
 
       if (response.ok) {
@@ -54,9 +69,13 @@ export default function EventsManager() {
 
   const handleStatusUpdate = async (id: number, newStatus: string) => {
     try {
+      const credentials = sessionStorage.getItem('admin_credentials');
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${credentials}`
+        },
         body: JSON.stringify({ status: newStatus }),
       });
 
