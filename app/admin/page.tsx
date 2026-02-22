@@ -78,6 +78,13 @@ export default function AdminPage() {
       const credentials = getAdminCredentials();
       if (!credentials) {
         setError('認証情報が見つかりません');
+        // デフォルト値を設定
+        setStats({
+          totalSales: 0,
+          totalPurchases: 0,
+          totalEvents: 0,
+          totalArtists: 0,
+        });
         return;
       }
       
@@ -92,9 +99,23 @@ export default function AdminPage() {
         setStats(data);
       } else {
         console.error('Failed to fetch stats');
+        // エラー時もデフォルト値を設定
+        setStats({
+          totalSales: 0,
+          totalPurchases: 0,
+          totalEvents: 0,
+          totalArtists: 0,
+        });
       }
     } catch (err) {
       console.error('Failed to fetch stats:', err);
+      // エラー時もデフォルト値を設定
+      setStats({
+        totalSales: 0,
+        totalPurchases: 0,
+        totalEvents: 0,
+        totalArtists: 0,
+      });
     }
   };
 
@@ -230,25 +251,25 @@ export default function AdminPage() {
                   <div className="bg-gray-700 rounded-lg p-6">
                     <div className="text-gray-400 text-sm mb-2">総売上</div>
                     <div className="text-3xl font-bold text-white">
-                      ¥{stats.totalSales.toLocaleString()}
+                      ¥{(stats.totalSales || 0).toLocaleString()}
                     </div>
                   </div>
                   <div className="bg-gray-700 rounded-lg p-6">
                     <div className="text-gray-400 text-sm mb-2">購入数</div>
                     <div className="text-3xl font-bold text-white">
-                      {stats.totalPurchases}
+                      {stats.totalPurchases || 0}
                     </div>
                   </div>
                   <div className="bg-gray-700 rounded-lg p-6">
                     <div className="text-gray-400 text-sm mb-2">イベント数</div>
                     <div className="text-3xl font-bold text-white">
-                      {stats.totalEvents}
+                      {stats.totalEvents || 0}
                     </div>
                   </div>
                   <div className="bg-gray-700 rounded-lg p-6">
                     <div className="text-gray-400 text-sm mb-2">アーティスト数</div>
                     <div className="text-3xl font-bold text-white">
-                      {stats.totalArtists}
+                      {stats.totalArtists || 0}
                     </div>
                   </div>
                 </div>
