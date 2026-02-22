@@ -32,8 +32,23 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       setStats(data);
+      
+      // エラーメッセージがある場合は表示
+      if (data.error) {
+        setError(data.error);
+      }
     } catch (err: any) {
+      console.error('Dashboard fetch error:', err);
       setError(err.message);
+      // エラー時もデフォルト値を設定
+      setStats({
+        totalRevenue: 0,
+        totalPurchases: 0,
+        totalEvents: 0,
+        totalArtists: 0,
+        recentPurchases: [],
+        eventSales: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -48,19 +63,18 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-900 bg-opacity-20 border border-red-800 rounded-lg p-6 text-center">
-        <i className="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
-        <p className="text-red-400">{error}</p>
-      </div>
-    );
-  }
-
   if (!stats) return null;
 
   return (
     <div className="space-y-8">
+      {/* エラーメッセージ（あれば表示） */}
+      {error && (
+        <div className="bg-yellow-900 bg-opacity-20 border border-yellow-800 rounded-lg p-4">
+          <i className="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+          <span className="text-yellow-400">{error}</span>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 shadow-lg">
@@ -69,7 +83,7 @@ export default function AdminDashboard() {
             <span className="text-purple-200 text-sm">総売上</span>
           </div>
           <p className="text-3xl font-bold text-white">
-            ¥{stats.totalRevenue.toLocaleString()}
+            ¥{(stats.totalRevenue || 0).toLocaleString()}
           </p>
         </div>
 
@@ -79,7 +93,7 @@ export default function AdminDashboard() {
             <span className="text-blue-200 text-sm">購入数</span>
           </div>
           <p className="text-3xl font-bold text-white">
-            {stats.totalPurchases}
+            {stats.totalPurchases || 0}
           </p>
         </div>
 
@@ -89,7 +103,7 @@ export default function AdminDashboard() {
             <span className="text-green-200 text-sm">イベント数</span>
           </div>
           <p className="text-3xl font-bold text-white">
-            {stats.totalEvents}
+            {stats.totalEvents || 0}
           </p>
         </div>
 
@@ -99,7 +113,7 @@ export default function AdminDashboard() {
             <span className="text-orange-200 text-sm">アーティスト数</span>
           </div>
           <p className="text-3xl font-bold text-white">
-            {stats.totalArtists}
+            {stats.totalArtists || 0}
           </p>
         </div>
       </div>
@@ -135,7 +149,7 @@ export default function AdminDashboard() {
                       {purchase.ticket_name}
                     </td>
                     <td className="py-3 px-4 text-right text-white font-bold">
-                      ¥{purchase.amount.toLocaleString()}
+                      ¥{(purchase.amount || 0).toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-right text-gray-400 text-sm">
                       {new Date(purchase.purchased_at).toLocaleString('ja-JP')}
@@ -168,7 +182,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-purple-400">
-                    ¥{event.total_revenue.toLocaleString()}
+                    ¥{(event.total_revenue || 0).toLocaleString()}
                   </p>
                 </div>
               </div>

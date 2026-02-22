@@ -69,12 +69,23 @@ async function handler(request: NextRequest) {
       recentPurchases: recentPurchases || [],
       eventSales: eventSales || [],
     });
-  } catch (error) {
-    console.error('Admin stats error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('Admin stats error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    // エラー時もデフォルト値を返す（画面が壊れないように）
+    return NextResponse.json({
+      totalRevenue: 0,
+      totalPurchases: 0,
+      totalEvents: 0,
+      totalArtists: 0,
+      recentPurchases: [],
+      eventSales: [],
+      error: 'データベース接続エラー。統計情報を取得できませんでした。',
+    });
   }
 }
 
