@@ -26,11 +26,17 @@ export default function MyPage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('[MyPage] Component mounted');
     const token = localStorage.getItem('authToken');
+    console.log('[MyPage] Token exists:', !!token);
+    
     if (!token) {
+      console.log('[MyPage] No token, redirecting to login');
       router.push('/login?redirect=/mypage');
       return;
     }
+
+    console.log('[MyPage] Fetching user info and purchases');
 
     // Fetch user info
     fetch('/api/auth/me', {
@@ -38,13 +44,17 @@ export default function MyPage() {
         'Authorization': `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
+      .then(res => {
+        console.log('[MyPage] User info response:', res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log('[MyPage] User data:', data);
         if (data.user) {
           setUserName(data.user.name || data.user.email);
         }
       })
-      .catch(err => console.error('Failed to fetch user:', err));
+      .catch(err => console.error('[MyPage] Failed to fetch user:', err));
 
     // Fetch user purchases
     fetch('/api/purchases/my', {
@@ -53,17 +63,19 @@ export default function MyPage() {
       },
     })
       .then(res => {
+        console.log('[MyPage] Purchases response:', res.status);
         if (!res.ok) {
           throw new Error('Failed to fetch purchases');
         }
         return res.json();
       })
       .then(data => {
+        console.log('[MyPage] Purchases data:', data);
         setPurchases(data.purchases || []);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error:', err);
+        console.error('[MyPage] Error fetching purchases:', err);
         setError('購入履歴の取得に失敗しました');
         setLoading(false);
       });
