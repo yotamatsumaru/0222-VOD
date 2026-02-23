@@ -91,50 +91,74 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
     if (!streamUrl || !videoRef.current) return;
 
     const video = videoRef.current;
+    console.log('[WatchPlayer] Loading stream URL:', streamUrl);
 
     // Check if HLS is supported natively (Safari)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      console.log('[WatchPlayer] Using native HLS support (Safari)');
       video.src = streamUrl;
+      
+      // For Safari, we can't get quality levels directly
+      // Show a message that quality is auto-managed
+      console.log('[WatchPlayer] Native HLS - quality levels not available');
     } else if (Hls.isSupported()) {
+      console.log('[WatchPlayer] Using HLS.js');
       // Use HLS.js for other browsers
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
+        debug: false,
       });
 
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('HLS manifest loaded');
+        console.log('[WatchPlayer] HLS manifest parsed');
+        console.log('[WatchPlayer] Available levels:', hls.levels.length);
+        
         // Get available quality levels
-        const levels = hls.levels.map((level, index) => ({
-          level: index,
-          height: level.height,
-          bitrate: level.bitrate,
-        }));
-        setAvailableQualities(levels);
-        setCurrentQuality(hls.currentLevel);
+        const levels = hls.levels.map((level, index) => {
+          console.log(`[WatchPlayer] Level ${index}:`, {
+            height: level.height,
+            width: level.width,
+            bitrate: level.bitrate,
+          });
+          return {
+            level: index,
+            height: level.height,
+            bitrate: level.bitrate,
+          };
+        });
+        
+        if (levels.length > 0) {
+          console.log('[WatchPlayer] Setting available qualities:', levels);
+          setAvailableQualities(levels);
+          setCurrentQuality(hls.currentLevel);
+        } else {
+          console.log('[WatchPlayer] No quality levels found in manifest');
+        }
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-        console.log('Quality switched to:', data.level);
+        console.log('[WatchPlayer] Quality switched to level:', data.level);
         setCurrentQuality(data.level);
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS error:', data);
+        console.error('[WatchPlayer] HLS error:', data);
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.error('Network error');
+              console.error('[WatchPlayer] Fatal network error, attempting recovery');
               hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.error('Media error');
+              console.error('[WatchPlayer] Fatal media error, attempting recovery');
               hls.recoverMediaError();
               break;
             default:
+              console.error('[WatchPlayer] Fatal error, cannot recover');
               setError('ストリーミングエラーが発生しました');
               break;
           }
@@ -144,9 +168,11 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
       hlsRef.current = hls;
 
       return () => {
+        console.log('[WatchPlayer] Cleaning up HLS instance');
         hls.destroy();
       };
     } else {
+      console.error('[WatchPlayer] HLS not supported');
       setError('お使いのブラウザはHLS再生に対応していません');
     }
   }, [streamUrl]);
@@ -312,50 +338,67 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
           </div>
 
           {/* Quality Settings - Below video as requested */}
-          {availableQualities.length > 0 && (
-            <div className="bg-black/40 backdrop-blur-md rounded-lg sm:rounded-xl border border-gray-800/50 p-4 sm:p-6">
-              <h3 className="text-white font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center">
-                <i className="fas fa-cog mr-2 text-purple-400"></i>
-                画質設定
-              </h3>
-              
-              {/* Quality buttons - responsive grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 mb-3">
-                <button
-                  onClick={() => handleQualityChange(-1)}
-                  className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
-                    currentQuality === -1
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105'
-                  }`}
-                >
-                  <i className="fas fa-magic mr-1.5"></i>
-                  自動
-                </button>
-                {availableQualities.map((quality) => (
+          <div className="bg-black/40 backdrop-blur-md rounded-lg sm:rounded-xl border border-gray-800/50 p-4 sm:p-6">
+            <h3 className="text-white font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center">
+              <i className="fas fa-cog mr-2 text-purple-400"></i>
+              画質設定
+            </h3>
+            
+            {availableQualities.length > 0 ? (
+              <>
+                {/* Quality buttons - responsive grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 mb-3">
                   <button
-                    key={quality.level}
-                    onClick={() => handleQualityChange(quality.level)}
+                    onClick={() => handleQualityChange(-1)}
                     className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
-                      currentQuality === quality.level
+                      currentQuality === -1
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 scale-105'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105'
                     }`}
                   >
-                    <i className="fas fa-video mr-1.5 text-xs"></i>
-                    {quality.height}p
+                    <i className="fas fa-magic mr-1.5"></i>
+                    自動
                   </button>
-                ))}
+                  {availableQualities.map((quality) => (
+                    <button
+                      key={quality.level}
+                      onClick={() => handleQualityChange(quality.level)}
+                      className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
+                        currentQuality === quality.level
+                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105'
+                      }`}
+                    >
+                      <i className="fas fa-video mr-1.5 text-xs"></i>
+                      {quality.height}p
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="flex items-start gap-2 text-gray-500 text-xs sm:text-sm bg-gray-900/50 rounded-lg p-3">
+                  <i className="fas fa-info-circle flex-shrink-0 mt-0.5"></i>
+                  <p className="leading-relaxed">
+                    画質を選択すると固定画質で再生されます。「自動」では通信環境に応じて最適な画質に自動調整されます。
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-start gap-3 text-gray-400 text-sm bg-gray-900/50 rounded-lg p-4">
+                <i className="fas fa-magic text-purple-400 text-xl flex-shrink-0 mt-0.5"></i>
+                <div>
+                  <p className="font-medium text-white mb-1">自動画質調整中</p>
+                  <p className="text-xs sm:text-sm leading-relaxed">
+                    このストリームは自動的に最適な画質で再生されています。通信環境に応じてリアルタイムで画質が調整されます。
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    <i className="fas fa-info-circle mr-1"></i>
+                    ブラウザ: {videoRef.current?.canPlayType('application/vnd.apple.mpegurl') ? 'Safari (ネイティブHLS)' : 'HLS.js'} | 
+                    画質レベル: マニフェストから取得中...
+                  </p>
+                </div>
               </div>
-              
-              <div className="flex items-start gap-2 text-gray-500 text-xs sm:text-sm bg-gray-900/50 rounded-lg p-3">
-                <i className="fas fa-info-circle flex-shrink-0 mt-0.5"></i>
-                <p className="leading-relaxed">
-                  画質を選択すると固定画質で再生されます。「自動」では通信環境に応じて最適な画質に自動調整されます。
-                </p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Tips Section - Optional, mobile friendly */}
           <div className="mt-4 sm:mt-6 bg-purple-900/20 backdrop-blur-md rounded-lg sm:rounded-xl border border-purple-500/30 p-4 sm:p-6">
