@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getAuthToken, getAuthHeaders } from '@/lib/userAuth';
 
 interface Purchase {
   id: number;
@@ -39,59 +40,63 @@ export default function MyPage() {
       return;
     }
 
-    console.log('[MyPage] Checking authentication');
-    const token = localStorage.getItem('authToken');
-    console.log('[MyPage] Token exists:', !!token);
+    // Add a small delay to ensure localStorage is accessible
+    const checkAuth = async () => {
+      console.log('[MyPage] Checking authentication');
+      
+      // Use the correct auth helper function
+      const token = getAuthToken();
+      console.log('[MyPage] Token exists:', !!token);
+      console.log('[MyPage] Token value:', token ? token.substring(0, 20) + '...' : 'null');
     
-    if (!token) {
-      console.log('[MyPage] No token, redirecting to login');
-      router.push('/login?redirect=/mypage');
-      return;
-    }
+      if (!token) {
+        console.log('[MyPage] No token, redirecting to login');
+        router.push('/login?redirect=/mypage');
+        return;
+      }
 
-    console.log('[MyPage] Fetching user info and purchases');
+      console.log('[MyPage] Fetching user info and purchases');
 
-    // Fetch user info
-    fetch('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => {
-        console.log('[MyPage] User info response:', res.status);
-        return res.json();
+      // Fetch user info using auth headers
+      fetch('/api/auth/me', {
+        headers: getAuthHeaders() as HeadersInit,
       })
-      .then(data => {
-        console.log('[MyPage] User data:', data);
-        if (data.user) {
-          setUserName(data.user.name || data.user.email);
-        }
-      })
-      .catch(err => console.error('[MyPage] Failed to fetch user:', err));
+        .then(res => {
+          console.log('[MyPage] User info response:', res.status);
+          return res.json();
+        })
+        .then(data => {
+          console.log('[MyPage] User data:', data);
+          if (data.user) {
+            setUserName(data.user.name || data.user.email);
+          }
+        })
+        .catch(err => console.error('[MyPage] Failed to fetch user:', err));
 
-    // Fetch user purchases
-    fetch('/api/purchases/my', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => {
-        console.log('[MyPage] Purchases response:', res.status);
-        if (!res.ok) {
-          throw new Error('Failed to fetch purchases');
-        }
-        return res.json();
+      // Fetch user purchases using auth headers
+      fetch('/api/purchases/my', {
+        headers: getAuthHeaders() as HeadersInit,
       })
-      .then(data => {
-        console.log('[MyPage] Purchases data:', data);
-        setPurchases(data.purchases || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('[MyPage] Error fetching purchases:', err);
-        setError('購入履歴の取得に失敗しました');
-        setLoading(false);
-      });
+        .then(res => {
+          console.log('[MyPage] Purchases response:', res.status);
+          if (!res.ok) {
+            throw new Error('Failed to fetch purchases');
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('[MyPage] Purchases data:', data);
+          setPurchases(data.purchases || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('[MyPage] Error fetching purchases:', err);
+          setError('購入履歴の取得に失敗しました');
+          setLoading(false);
+        });
+    };
+
+    checkAuth();
   }, [mounted, router]);
 
   // Don't render anything until mounted
@@ -104,7 +109,9 @@ export default function MyPage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+    }
     router.push('/');
   };
 
