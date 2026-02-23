@@ -89,9 +89,7 @@ export default function Navigation() {
                 <Link
                   href="/mypage"
                   className="text-purple-400 hover:text-purple-300 px-3 py-2 transition inline-flex items-center"
-                  onClick={(e) => {
-                    console.log('[Navigation] MyPage link clicked');
-                  }}
+                  prefetch={true}
                 >
                   <i className="fas fa-user-circle mr-2 text-lg"></i>
                   <span>{userName || 'マイページ'}</span>
