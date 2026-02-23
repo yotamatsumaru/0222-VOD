@@ -34,6 +34,7 @@
   "/events/page": "/events",
   "/forgot-password/page": "/forgot-password",
   "/login/page": "/login",
+  "/mypage-test/page": "/mypage-test",
   "/mypage/page": "/mypage",
   "/page": "/",
   "/register/page": "/register",

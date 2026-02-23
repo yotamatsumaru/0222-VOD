@@ -272,6 +272,12 @@
       "namedRegex": "^/mypage(?:/)?$"
     },
     {
+      "page": "/mypage-test",
+      "regex": "^/mypage\\-test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/mypage\\-test(?:/)?$"
+    },
+    {
       "page": "/register",
       "regex": "^/register(?:/)?$",
       "routeKeys": {},

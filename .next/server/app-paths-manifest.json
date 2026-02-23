@@ -34,6 +34,7 @@
   "/events/page": "app/events/page.js",
   "/forgot-password/page": "app/forgot-password/page.js",
   "/login/page": "app/login/page.js",
+  "/mypage-test/page": "app/mypage-test/page.js",
   "/mypage/page": "app/mypage/page.js",
   "/page": "app/page.js",
   "/register/page": "app/register/page.js",
