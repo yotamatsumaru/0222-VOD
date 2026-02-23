@@ -27,14 +27,17 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
 
   useEffect(() => {
     if (!token) {
-      setError('アクセストークンが必要です');
+      setError('アクセストークンが必要です。マイページから視聴してください。');
       setLoading(false);
       return;
     }
 
+    console.log('[WatchPlayer] Starting verification for:', { slug, tokenPreview: token.substring(0, 20) + '...' });
+
     const verifyAndLoadStream = async () => {
       try {
         // Verify token
+        console.log('[WatchPlayer] Verifying token...');
         const verifyResponse = await fetch('/api/watch/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -42,14 +45,17 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
         });
 
         const verifyData = await verifyResponse.json();
+        console.log('[WatchPlayer] Verify response:', { status: verifyResponse.status, data: verifyData });
 
         if (!verifyResponse.ok) {
           throw new Error(verifyData.error || 'Token verification failed');
         }
 
         setEvent(verifyData.event);
+        console.log('[WatchPlayer] Event verified:', verifyData.event);
 
         // Get stream URL
+        console.log('[WatchPlayer] Getting stream URL...');
         const streamResponse = await fetch('/api/watch/stream-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,14 +63,17 @@ export default function WatchPlayer({ slug, token }: WatchPlayerProps) {
         });
 
         const streamData = await streamResponse.json();
+        console.log('[WatchPlayer] Stream response:', { status: streamResponse.status, data: streamData });
 
         if (!streamResponse.ok) {
           throw new Error(streamData.error || 'Failed to get stream URL');
         }
 
+        console.log('[WatchPlayer] Stream URL obtained:', streamData.streamUrl);
         setStreamUrl(streamData.streamUrl);
         setLoading(false);
       } catch (err: any) {
+        console.error('[WatchPlayer] Error:', err);
         setError(err.message);
         setLoading(false);
       }
