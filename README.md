@@ -1,427 +1,146 @@
-# ライブ配信・ストリーミングプラットフォーム (Next.js 14)
+# ライブ配信・ストリーミングプラットフォーム
 
 AWS・Stripe・Next.jsを使用したライブ配信・ストリーミング基盤
 
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.2-38bdf8)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791)](https://www.postgresql.org/)
+[![Stripe](https://img.shields.io/badge/Stripe-API-008CDD)](https://stripe.com/)
+
 ## 🎯 主な機能
 
-### ✅ 実装済み機能
+- ✅ イベント管理（ライブ/アーカイブ配信）
+- ✅ アーティスト管理
+- ✅ チケット購入システム（Stripe決済）
+- ✅ 視聴認証（JWT）
+- ✅ HLS動画プレイヤー
+- ✅ CloudFront署名付きURL（DRM対応）
+- ✅ 管理画面（ダッシュボード、CRUD操作）
 
-1. **イベント管理システム**
-   - ライブ配信とアーカイブ配信の両対応
-   - イベント一覧・詳細表示
-   - ステータス管理（upcoming, live, ended, archived）
-
-2. **アーティスト管理**
-   - アーティスト専用ページ
-   - アーティストごとのイベント一覧
-   - プロフィール表示
-
-3. **チケット購入システム**
-   - Stripe Checkoutによる安全な決済
-   - 複数チケット種別対応
-   - 在庫管理機能
-   - 購入完了後の自動アクセストークン発行
-
-4. **視聴認証システム**
-   - JWT ベースのアクセストークン
-   - トークンの有効期限管理
-   - 購入確認による視聴権限チェック
-
-5. **HLS 動画プレイヤー**
-   - HLS.js による HLS 再生
-   - ライブ配信とアーカイブ配信の切り替え
-   - レスポンシブデザイン
-
-6. **CloudFront 署名付きURL生成**
-   - セキュアな配信URLの生成
-   - DRM保護対応の準備
-
-7. **管理画面**
-   - Basic認証によるログイン
-   - ダッシュボード（売上統計・購入数）
-   - イベント管理（CRUD操作、ステータス更新）
-   - アーティスト管理（CRUD操作）
-   - チケット管理（CRUD操作）
-   - 購入履歴確認
-
-### 🚧 今後の拡張予定
-
-1. **メール通知** - 購入確認メール、視聴URL送信
-2. **ユーザーマイページ** - 購入履歴、チケット管理
-
-## 📁 プロジェクト構造
-
-```
-webapp/
-├── app/
-│   ├── api/
-│   │   ├── health/
-│   │   ├── events/
-│   │   ├── artists/
-│   │   ├── stripe/
-│   │   ├── watch/
-│   │   ├── purchases/
-│   │   └── admin/          # 管理画面API
-│   ├── events/
-│   │   └── [slug]/
-│   ├── artists/
-│   │   └── [slug]/
-│   ├── watch/
-│   │   └── [slug]/
-│   ├── success/
-│   ├── admin/              # 管理画面ページ
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── globals.css
-├── components/
-│   ├── Navigation.tsx
-│   ├── EventCard.tsx
-│   ├── TicketPurchase.tsx
-│   ├── WatchPlayer.tsx
-│   ├── SuccessContent.tsx
-│   └── admin/              # 管理画面コンポーネント
-│       ├── Dashboard.tsx
-│       ├── EventsManager.tsx
-│       ├── ArtistsManager.tsx
-│       ├── TicketsManager.tsx
-│       └── PurchasesView.tsx
-├── lib/
-│   ├── db.ts
-│   ├── stripe.ts
-│   ├── auth.ts
-│   ├── adminAuth.ts        # 管理画面認証
-│   ├── cloudfront.ts
-│   └── types.ts
-├── prisma/
-│   ├── migrations/
-│   │   └── 0001_initial_schema.sql
-│   └── seed.sql
-├── public/
-│   └── images/
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-├── package.json
-└── README.md
-```
-
-## 🗄️ データベース設計
-
-### テーブル構成
-
-1. **artists** - アーティスト情報
-2. **events** - イベント（ライブ/アーカイブ）
-3. **tickets** - チケット種別
-4. **purchases** - 購入履歴
-5. **admins** - 管理者アカウント
-
-## 🔌 API エンドポイント
-
-### イベント API
-
-- `GET /api/events` - イベント一覧取得
-- `GET /api/events/[slug]` - イベント詳細取得
-- `GET /api/events/[slug]/tickets` - チケット一覧取得
-
-### アーティスト API
-
-- `GET /api/artists` - アーティスト一覧取得
-- `GET /api/artists/[slug]` - アーティスト詳細取得
-
-### Stripe API
-
-- `POST /api/stripe/checkout` - チェックアウトセッション作成
-- `POST /api/stripe/webhook` - Stripe Webhook ハンドラー
-
-### 視聴認証 API
-
-- `POST /api/watch/verify` - アクセストークン検証
-- `POST /api/watch/stream-url` - 署名付きURL取得
-
-### 購入情報 API
-
-- `GET /api/purchases/[sessionId]` - 購入詳細取得
-
-### 管理画面 API
-
-- `GET /api/admin/stats` - 統計情報取得（総売上、購入数など）
-- `GET /api/admin/events` - イベント一覧取得
-- `POST /api/admin/events` - イベント作成
-- `GET /api/admin/events/[id]` - イベント詳細取得
-- `PATCH /api/admin/events/[id]` - イベント更新
-- `DELETE /api/admin/events/[id]` - イベント削除
-- `GET /api/admin/artists` - アーティスト一覧取得
-- `POST /api/admin/artists` - アーティスト作成
-- `GET /api/admin/artists/[id]` - アーティスト詳細取得
-- `PATCH /api/admin/artists/[id]` - アーティスト更新
-- `DELETE /api/admin/artists/[id]` - アーティスト削除
-- `GET /api/admin/tickets` - チケット一覧取得
-- `POST /api/admin/tickets` - チケット作成
-- `GET /api/admin/tickets/[id]` - チケット詳細取得
-- `PATCH /api/admin/tickets/[id]` - チケット更新
-- `DELETE /api/admin/tickets/[id]` - チケット削除
-- `GET /api/admin/purchases` - 購入履歴一覧取得
-
-> **注意**: すべての管理画面APIはBasic認証が必要です
-
-## ⚙️ セットアップ手順
-
-### 1. 依存関係のインストール
+## 🚀 クイックスタート
 
 ```bash
-cd /home/user/webapp
+# リポジトリをクローン
+git clone https://github.com/yotamatsumaru/0222-VOD.git
+cd 0222-VOD
+
+# 依存関係をインストール
 npm install
-```
 
-### 2. 環境変数の設定
+# 環境変数を設定
+cp .env.example .env.local
+# .env.localを編集
 
-`.env.local` ファイルを作成（`.env.example` を参考に）:
-
-```bash
-# Database (RDS for Production, localhost for Development)
-# RDS: postgresql://user:password@rds-endpoint.rds.amazonaws.com:5432/streaming_platform
-DATABASE_URL=postgresql://username:password@localhost:5432/streaming_platform
-
-# Stripe
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
-
-# JWT Secret
-JWT_SECRET=your_random_jwt_secret_here
-
-# Admin Credentials
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your_secure_password_here
-
-# CloudFront (Optional)
-CLOUDFRONT_PRIVATE_KEY=your_cloudfront_private_key
-CLOUDFRONT_KEY_PAIR_ID=your_cloudfront_key_pair_id
-CLOUDFRONT_DOMAIN=your_cloudfront_domain.cloudfront.net
-
-# App URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-> **AWS RDS を使用する場合**  
-> 詳細な設定手順は [RDS_SETUP.md](./RDS_SETUP.md) を参照してください。
-
-### 3. データベースのセットアップ
-
-```bash
-# PostgreSQLデータベースを作成
+# データベースを作成
 createdb streaming_platform
 
 # マイグレーション実行
 npm run db:migrate
 
-# シードデータ投入
-npm run db:seed
-```
-
-> **⚠️ データベース接続エラーが発生する場合**  
-> 詳細なセットアップ手順は [DATABASE_SETUP.md](./DATABASE_SETUP.md) を参照してください。
-
-### 4. 開発サーバーの起動
-
-```bash
-# 開発モード
+# 開発サーバー起動
 npm run dev
-
-# 本番ビルド
-npm run build
-
-# 本番サーバー起動
-npm start
 ```
 
-サーバーは http://localhost:3000 で起動します。
+ブラウザで http://localhost:3000 にアクセス
 
-## 🔐 Stripe 設定
+## 📚 完全ドキュメント
 
-### Webhook の設定
+すべての詳細情報は **[DOCUMENTATION.md](./DOCUMENTATION.md)** をご覧ください：
 
-1. Stripe Dashboard で Webhook エンドポイントを追加:
-   - URL: `https://your-domain.com/api/stripe/webhook`
-   - イベント: `checkout.session.completed`, `charge.refunded`
-
-2. Webhook 署名シークレットを `.env.local` に設定
-
-### テストカード
-
-Stripe テストモードで使用できるカード:
-
-- カード番号: `4242 4242 4242 4242`
-- 有効期限: 任意の未来の日付
-- CVC: 任意の3桁
-- 郵便番号: 任意
+- ✨ プロジェクト概要と機能詳細
+- ⚙️ 環境構築手順
+- 🚀 AWS EC2 + RDS デプロイ
+- 🔧 トラブルシューティング
+- 💳 Stripe設定
+- 📡 API仕様
+- 🗄️ データベース設計
 
 ## 🎬 使い方
 
 ### ユーザーフロー
 
-1. **イベントを探す**: トップページまたはイベント一覧ページでイベントを閲覧
-2. **チケット購入**: イベント詳細ページでチケットを選択して購入
-3. **決済**: Stripe Checkout で安全に決済
-4. **視聴**: 購入完了後、アクセストークンを使って視聴ページにアクセス
+1. **イベントを探す** → トップページでイベント閲覧
+2. **チケット購入** → Stripe Checkoutで決済
+3. **視聴** → アクセストークンで視聴ページにアクセス
 
 ### 管理者フロー
 
-1. **管理画面にアクセス**: `https://your-domain.com/admin`
-2. **ログイン**: Basic認証で管理者ログイン
-3. **ダッシュボード**: 売上統計や購入数を確認
-4. **イベント管理**: イベントの作成、編集、削除、ステータス変更
-5. **アーティスト管理**: アーティストの追加・編集
-6. **チケット管理**: チケット種別の設定・在庫管理
-7. **購入履歴**: すべての購入情報を確認
+1. **管理画面にアクセス** → `https://your-domain.com/admin`
+2. **ログイン** → Basic認証（デフォルト: admin / admin123）
+3. **ダッシュボード** → 売上統計や購入数を確認
+4. **イベント管理** → イベントの作成・編集・削除
+5. **アーティスト管理** → アーティストの追加・編集
+6. **チケット管理** → チケット種別の設定・在庫管理
 
-### AWS 配信環境との連携
+## 🔑 環境変数
 
-このフロントエンドは、以下のAWS環境と連携することを想定しています:
+`.env.local` ファイルに以下を設定：
 
-- **AWS MediaLive**: OBSからのRTMP入力受信
-- **AWS MediaPackage**: HLS変換とDRM適用
-- **CloudFront**: CDN配信と署名付きURL
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@host:5432/streaming_platform
 
-データベースの `events` テーブルに配信URLを設定:
+# Stripe
+STRIPE_SECRET_KEY=sk_test_your_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key
 
-```sql
-UPDATE events 
-SET stream_url = 'https://your-cloudfront-domain.net/out/v1/xxx/index.m3u8'
-WHERE id = 1;
+# JWT & Admin
+JWT_SECRET=your_secret_32_chars_min
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_password
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-## 📊 サンプルデータ
+## 🎨 スクリーンショット
 
-初期データとして以下が登録されています:
+### トップページ
+紫のグラデーション背景で洗練されたUIデザイン
 
-### アーティスト
+### 管理画面
+売上統計、イベント・アーティスト・チケットの完全管理
 
-1. REIRIE
-2. みことね
+## 📊 技術スタック
 
-### イベント
-
-- REIRIE LIVE 2026 シリーズ（12公演）
-- みことね - The SOUND of LOVE
-
-### チケット
-
-- 一般チケット: ¥3,000
-
-### 管理者アカウント
-
-- ユーザー名: `admin`
-- パスワード: `admin123`
+- **フロントエンド**: Next.js 16 (App Router), TypeScript, Tailwind CSS 4
+- **バックエンド**: Next.js API Routes, PostgreSQL
+- **決済**: Stripe
+- **認証**: JWT (jsonwebtoken)
+- **動画再生**: HLS.js, Video.js
+- **配信**: AWS MediaLive, MediaPackage, CloudFront
 
 ## 🚀 デプロイ
 
-### ⚠️ ログインエラーでお困りの場合
-
-EC2で管理画面ログイン時に「Application error」が発生する場合は、完全クリーンデプロイが必要です:
-
-👉 **[EC2_CLEAN_DEPLOYMENT.md](./EC2_CLEAN_DEPLOYMENT.md) を参照してください**
-
-このガイドには以下が含まれています:
-- 完全なクリーンインストール手順
-- トラブルシューティング
-- セキュリティ推奨事項
-- 本番環境チェックリスト
-
-### クイックスタート（EC2 + RDS）
-
-EC2とRDSを使用した構成の場合は、[QUICK_START_RDS.md](./QUICK_START_RDS.md) を参照してください。
-
-### Vercel へのデプロイ
+### Vercel
 
 ```bash
-# Vercel CLIのインストール
-npm i -g vercel
-
-# デプロイ
-vercel
-
-# 本番デプロイ
 vercel --prod
 ```
 
-環境変数は Vercel Dashboard で設定してください。
+### AWS EC2 + RDS
 
-### AWS EC2 へのデプロイ
+詳細は **[DOCUMENTATION.md](./DOCUMENTATION.md#aws-ec2--rds-デプロイ)** を参照
 
-1. PostgreSQL のセットアップ（ローカルDB）または AWS RDS の使用
-2. Node.js のインストール
-3. プロジェクトのクローンとビルド
-4. PM2 または systemd でサービス化
-5. Nginx でリバースプロキシ設定
+## 🐛 トラブルシューティング
 
-> **AWS RDS を使用する場合**  
-> 詳細な設定手順は [RDS_SETUP.md](./RDS_SETUP.md) を参照してください。
+問題が発生した場合は **[DOCUMENTATION.md](./DOCUMENTATION.md#トラブルシューティング)** を参照してください。
 
-**詳細な手順**は [AWS_DEPLOYMENT.md](./AWS_DEPLOYMENT.md) を参照してください。
-
-## 🔧 トラブルシューティング
-
-### 管理画面ログインエラー
-
-**症状**: ログイン後に「Application error: a client-side exception has occurred」が表示される
-
-**原因**: 
-- 古いビルドキャッシュが残っている
-- ブラウザキャッシュが古いファイルを使用している
-- 最新のnull安全性修正が適用されていない
-
-**解決方法**: 
-1. **完全クリーンデプロイを実行** - [EC2_CLEAN_DEPLOYMENT.md](./EC2_CLEAN_DEPLOYMENT.md) の手順に従ってください
-2. **シークレットモードで確認** - Ctrl+Shift+N でシークレットウィンドウを開く
-3. **ブラウザキャッシュをクリア** - Ctrl+Shift+Delete で完全削除
-
-> **重要**: 最新コミット（81c1e22）には重要な修正が含まれています。必ず最新コードを取得してください。
-
-### ビルドエラー
-
-```bash
-# node_modules を削除して再インストール
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### データベースエラー（ECONNREFUSED）
-
-**症状**: 管理画面やAPIで500エラーが発生し、`ECONNREFUSED` エラーが表示される
-
-**原因**: PostgreSQLデータベースに接続できていない
-
-**解決方法**: [DATABASE_SETUP.md](./DATABASE_SETUP.md) の詳細な手順を参照してください
-
-```bash
-# 簡易チェック
-sudo systemctl status postgresql
-psql -U streaming_user -d streaming_platform -h localhost -c "SELECT 1;"
-
-# データベースをリセット
-dropdb streaming_platform
-createdb streaming_platform
-npm run db:migrate
-npm run db:seed
-```
-
-## 📄 技術スタック
-
-- **フレームワーク**: Next.js 14 (App Router)
-- **言語**: TypeScript
-- **スタイリング**: Tailwind CSS
-- **データベース**: PostgreSQL
-- **決済**: Stripe
-- **認証**: JWT (jsonwebtoken)
-- **動画再生**: HLS.js
-- **CDN**: AWS CloudFront
-- **配信**: AWS MediaLive / MediaPackage
+一般的な問題：
+- 管理画面ログインエラー
+- データベース接続エラー
+- Stripe決済エラー
 
 ## 📝 ライセンス
 
 本プロジェクトは開発中のベータ版です。
+
+## 🔗 リンク
+
+- **GitHub**: https://github.com/yotamatsumaru/0222-VOD
+- **完全ドキュメント**: [DOCUMENTATION.md](./DOCUMENTATION.md)
 
 ---
 
