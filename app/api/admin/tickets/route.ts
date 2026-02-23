@@ -24,12 +24,16 @@ async function getHandler(request: NextRequest) {
 async function postHandler(request: NextRequest) {
   try {
     const body = await request.json();
-    const { eventId, name, description, price, currency, stock, isActive } = body;
+    const { eventId, event_id, name, description, price, currency, stock, isActive, is_active } = body;
+
+    // Support both camelCase and snake_case
+    const finalEventId = eventId || event_id;
+    const finalIsActive = isActive !== undefined ? isActive : (is_active !== undefined ? is_active : true);
 
     console.log('POST /api/admin/tickets - Request body:', body);
 
-    if (!eventId || !name || price === undefined) {
-      console.error('POST /api/admin/tickets - Missing required fields:', { eventId, name, price });
+    if (!finalEventId || !name || price === undefined) {
+      console.error('POST /api/admin/tickets - Missing required fields:', { finalEventId, name, price });
       return NextResponse.json(
         { error: 'Missing required fields: eventId, name, and price are required' },
         { status: 400 }
@@ -43,13 +47,13 @@ async function postHandler(request: NextRequest) {
        VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
        RETURNING *`,
       [
-        eventId,
+        finalEventId,
         name,
         description || null,
         price,
         currency || 'jpy',
         stock || null,
-        isActive !== undefined ? isActive : true,
+        finalIsActive,
       ]
     );
 

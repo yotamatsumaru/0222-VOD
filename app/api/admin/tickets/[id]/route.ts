@@ -9,7 +9,10 @@ async function patchHandler(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, price, stock, isActive } = body;
+    const { name, description, price, stock, isActive, is_active } = body;
+
+    // Support both camelCase and snake_case
+    const finalIsActive = isActive !== undefined ? isActive : is_active;
 
     const ticket = await update(
       `UPDATE tickets SET
@@ -21,7 +24,7 @@ async function patchHandler(
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $6
       RETURNING *`,
-      [name, description, price, stock, isActive, parseInt(id)]
+      [name, description, price, stock, finalIsActive, parseInt(id)]
     );
 
     if (!ticket) {
