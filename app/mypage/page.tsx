@@ -23,10 +23,23 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userName, setUserName] = useState('');
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
+  // First useEffect: Handle mounting
   useEffect(() => {
     console.log('[MyPage] Component mounted');
+    setMounted(true);
+  }, []);
+
+  // Second useEffect: Handle authentication and data fetching
+  useEffect(() => {
+    if (!mounted) {
+      console.log('[MyPage] Not mounted yet, skipping auth check');
+      return;
+    }
+
+    console.log('[MyPage] Checking authentication');
     const token = localStorage.getItem('authToken');
     console.log('[MyPage] Token exists:', !!token);
     
@@ -79,7 +92,16 @@ export default function MyPage() {
         setError('購入履歴の取得に失敗しました');
         setLoading(false);
       });
-  }, [router]);
+  }, [mounted, router]);
+
+  // Don't render anything until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-xl">読み込み中...</div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
