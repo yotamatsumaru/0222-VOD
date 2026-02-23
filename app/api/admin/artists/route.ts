@@ -21,9 +21,9 @@ async function getHandler(request: NextRequest) {
 async function postHandler(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, slug, bio, imageUrl } = body;
+    const { name, slug, bio, image_url } = body;
 
-    console.log('POST /api/admin/artists - Request body:', { name, slug, bio, imageUrl });
+    console.log('POST /api/admin/artists - Request body:', { name, slug, bio, image_url });
 
     if (!name || !slug) {
       console.error('POST /api/admin/artists - Missing required fields:', { name, slug });
@@ -39,7 +39,7 @@ async function postHandler(request: NextRequest) {
       `INSERT INTO artists (name, slug, bio, image_url)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [name, slug, bio || null, imageUrl || null]
+      [name, slug, bio || null, image_url || null]
     );
 
     console.log('POST /api/admin/artists - Artist created successfully:', artist);

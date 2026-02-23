@@ -9,7 +9,7 @@ async function patchHandler(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, slug, bio, imageUrl } = body;
+    const { name, slug, bio, image_url } = body;
 
     const artist = await update(
       `UPDATE artists SET
@@ -20,7 +20,7 @@ async function patchHandler(
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $5
       RETURNING *`,
-      [name, slug, bio, imageUrl, parseInt(id)]
+      [name, slug, bio, image_url, parseInt(id)]
     );
 
     if (!artist) {

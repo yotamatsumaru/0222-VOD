@@ -12,16 +12,27 @@ async function patchHandler(
 
     const {
       artistId,
+      artist_id,
       title,
       slug,
       description,
-      thumbnailUrl,
-      streamUrl,
-      archiveUrl,
+      thumbnail_url,
+      stream_url,
+      archive_url,
       status,
       startTime,
+      start_time,
       endTime,
+      end_time,
     } = body;
+
+    // Support both camelCase and snake_case
+    const finalArtistId = artistId || artist_id;
+    const finalThumbnailUrl = thumbnail_url;
+    const finalStreamUrl = stream_url;
+    const finalArchiveUrl = archive_url;
+    const finalStartTime = startTime || start_time;
+    const finalEndTime = endTime || end_time;
 
     const event = await update(
       `UPDATE events SET
@@ -39,16 +50,16 @@ async function patchHandler(
       WHERE id = $11
       RETURNING *`,
       [
-        artistId,
+        finalArtistId,
         title,
         slug,
         description,
-        thumbnailUrl,
-        streamUrl,
-        archiveUrl,
+        finalThumbnailUrl,
+        finalStreamUrl,
+        finalArchiveUrl,
         status,
-        startTime,
-        endTime,
+        finalStartTime,
+        finalEndTime,
         parseInt(id),
       ]
     );

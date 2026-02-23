@@ -26,21 +26,32 @@ async function postHandler(request: NextRequest) {
     const body = await request.json();
     const {
       artistId,
+      artist_id,
       title,
       slug,
       description,
-      thumbnailUrl,
-      streamUrl,
-      archiveUrl,
+      thumbnail_url,
+      stream_url,
+      archive_url,
       status,
       startTime,
+      start_time,
       endTime,
+      end_time,
     } = body;
+
+    // Support both camelCase and snake_case
+    const finalArtistId = artistId || artist_id;
+    const finalThumbnailUrl = thumbnail_url;
+    const finalStreamUrl = stream_url;
+    const finalArchiveUrl = archive_url;
+    const finalStartTime = startTime || start_time;
+    const finalEndTime = endTime || end_time;
 
     console.log('POST /api/admin/events - Request body:', body);
 
-    if (!artistId || !title || !slug) {
-      console.error('POST /api/admin/events - Missing required fields:', { artistId, title, slug });
+    if (!finalArtistId || !title || !slug) {
+      console.error('POST /api/admin/events - Missing required fields:', { finalArtistId, title, slug });
       return NextResponse.json(
         { error: 'Missing required fields: artistId, title, and slug are required' },
         { status: 400 }
@@ -56,16 +67,16 @@ async function postHandler(request: NextRequest) {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
       [
-        artistId,
+        finalArtistId,
         title,
         slug,
         description || null,
-        thumbnailUrl || null,
-        streamUrl || null,
-        archiveUrl || null,
+        finalThumbnailUrl || null,
+        finalStreamUrl || null,
+        finalArchiveUrl || null,
         status || 'upcoming',
-        startTime || null,
-        endTime || null,
+        finalStartTime || null,
+        finalEndTime || null,
       ]
     );
 
