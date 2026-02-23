@@ -5,12 +5,13 @@
   --foreground: #ffffff;
 }
 
-/* かっこいい紫グラデーション背景 */
+/* 暗めの紫グラデーション背景（インデックス表示の可読性向上） */
 body {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+  background: linear-gradient(135deg, #0d0320 0%, #1a0b3e 25%, #2d1855 50%, #1a0b3e 75%, #0d0320 100%);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
   min-height: 100vh;
+  color: #ffffff;
 }
 
 @keyframes gradient {

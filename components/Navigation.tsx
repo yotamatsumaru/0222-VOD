@@ -1,10 +1,48 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated, removeAuthToken, getAuthHeaders } from '@/lib/userAuth';
 
 export default function Navigation() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    // ログイン状態をチェック
+    const checkAuth = async () => {
+      const authenticated = isAuthenticated();
+      setIsLoggedIn(authenticated);
+
+      if (authenticated) {
+        // ユーザー情報を取得
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: getAuthHeaders() as HeadersInit,
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUserName(data.user.name || data.user.email);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user:', error);
+        }
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    removeAuthToken();
+    setIsLoggedIn(false);
+    setUserName(null);
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <nav className="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
@@ -21,7 +59,7 @@ export default function Navigation() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex space-x-4 items-center">
             <Link
               href="/"
               className="text-gray-300 hover:text-white px-3 py-2 transition"
@@ -40,6 +78,42 @@ export default function Navigation() {
             >
               イベント
             </Link>
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/mypage"
+                  className="text-purple-400 hover:text-purple-300 px-3 py-2 transition"
+                >
+                  <i className="fas fa-user mr-2"></i>
+                  {userName || 'マイページ'}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-white px-3 py-2 transition"
+                >
+                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  ログアウト
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-gray-300 hover:text-white px-3 py-2 transition"
+                >
+                  <i className="fas fa-sign-in-alt mr-2"></i>
+                  ログイン
+                </Link>
+                <Link
+                  href="/register"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+                >
+                  <i className="fas fa-user-plus mr-2"></i>
+                  新規登録
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -81,6 +155,48 @@ export default function Navigation() {
             >
               <i className="fas fa-calendar-alt mr-2"></i>イベント
             </Link>
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/mypage"
+                  className="block text-purple-400 px-3 py-2 rounded hover:bg-gray-800 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-user mr-2"></i>
+                  {userName || 'マイページ'}
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left text-gray-400 px-3 py-2 rounded hover:bg-gray-800 transition"
+                >
+                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  ログアウト
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="block text-gray-300 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-sign-in-alt mr-2"></i>
+                  ログイン
+                </Link>
+                <Link
+                  href="/register"
+                  className="block bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-user-plus mr-2"></i>
+                  新規登録
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

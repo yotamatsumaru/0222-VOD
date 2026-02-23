@@ -1,14 +1,34 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { getOne } from '@/lib/db';
 import { Event, Ticket } from '@/lib/types';
+import { verifyToken } from '@/lib/userAuth';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     if (!stripe) {
       return NextResponse.json(
         { error: 'Stripe is not configured' },
         { status: 500 }
+      );
+    }
+
+    // ユーザー認証チェック
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'ログインが必要です', requiresAuth: true },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const userPayload = verifyToken(token);
+
+    if (!userPayload) {
+      return NextResponse.json(
+        { error: 'ログインセッションが無効です', requiresAuth: true },
+        { status: 401 }
       );
     }
 
@@ -78,7 +98,10 @@ export async function POST(request: Request) {
         event_id: event.id.toString(),
         ticket_id: ticket.id.toString(),
         event_slug: eventSlug,
+        user_id: userPayload.userId.toString(), // ユーザーIDを追加
+        user_email: userPayload.email,
       },
+      customer_email: userPayload.email, // Stripeの顧客メールを設定
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });

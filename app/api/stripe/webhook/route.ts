@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         
         const eventId = parseInt(session.metadata?.event_id || '0');
         const ticketId = parseInt(session.metadata?.ticket_id || '0');
+        const userId = parseInt(session.metadata?.user_id || '0');
         
         if (!eventId || !ticketId) {
           console.error('Missing metadata in session:', session.id);
@@ -58,15 +59,16 @@ export async function POST(request: Request) {
         const purchase = await insert(
           `
           INSERT INTO purchases (
-            event_id, ticket_id, stripe_session_id,
+            event_id, ticket_id, user_id, stripe_session_id,
             stripe_payment_intent, customer_email, customer_name,
             amount, currency, status
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           RETURNING id
         `,
           [
             eventId,
             ticketId,
+            userId || null,
             session.id,
             session.payment_intent,
             session.customer_details?.email || '',

@@ -26,18 +26,28 @@ async function migrate() {
     await client.connect();
     console.log('✅ Connected successfully!');
 
-    const migrationPath = path.join(__dirname, '../prisma/migrations/0001_initial_schema.sql');
+    const migrationsDir = path.join(__dirname, '../prisma/migrations');
+    const migrationFiles = fs.readdirSync(migrationsDir)
+      .filter(file => file.endsWith('.sql'))
+      .sort(); // ファイル名でソート（0001, 0002, ...）
     
-    if (!fs.existsSync(migrationPath)) {
-      console.error('❌ Migration file not found:', migrationPath);
+    if (migrationFiles.length === 0) {
+      console.error('❌ No migration files found in:', migrationsDir);
       process.exit(1);
     }
     
-    const sql = fs.readFileSync(migrationPath, 'utf8');
+    console.log(`📂 Found ${migrationFiles.length} migration file(s)`);
 
-    console.log('🚀 Running migration...');
-    await client.query(sql);
-    console.log('✅ Migration completed successfully!');
+    for (const file of migrationFiles) {
+      const migrationPath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      
+      console.log(`🚀 Running migration: ${file}...`);
+      await client.query(sql);
+      console.log(`✅ ${file} completed!`);
+    }
+    
+    console.log('✅ All migrations completed successfully!');
 
   } catch (error) {
     console.error('❌ Migration error:', error);
