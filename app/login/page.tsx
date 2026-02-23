@@ -96,7 +96,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-900 bg-opacity-50 border-2 border-red-400 text-red-200 px-4 py-3 rounded-lg text-sm font-semibold shadow-lg">
                 <i className="fas fa-exclamation-circle mr-2"></i>
                 {error}
               </div>
@@ -121,11 +121,17 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-3">
             <p className="text-gray-400 text-sm">
               アカウントをお持ちでない方は{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 font-medium">
                 新規登録
+              </Link>
+            </p>
+            <p className="text-gray-400 text-sm">
+              <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300 font-medium">
+                <i className="fas fa-key mr-1"></i>
+                パスワードを忘れた方
               </Link>
             </p>
           </div>

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe, STRIPE_WEBHOOK_SECRET } from '@/lib/stripe';
-import { insert, update } from '@/lib/db';
+import { insert, update, getOne } from '@/lib/db';
 import { generateAccessToken } from '@/lib/auth';
+import { generatePurchaseConfirmationEmail, sendEmail } from '@/lib/email';
 import Stripe from 'stripe';
 
 export async function POST(request: Request) {
@@ -102,6 +103,40 @@ export async function POST(request: Request) {
           'UPDATE tickets SET sold = sold + 1 WHERE id = $1',
           [ticketId]
         );
+
+        // 購入確認メール送信（非同期、エラーでも決済は成功扱い）
+        try {
+          const eventSlug = session.metadata?.event_slug || '';
+          const eventData: any = await getOne(
+            'SELECT title FROM events WHERE id = $1',
+            [eventId]
+          );
+          const ticketData: any = await getOne(
+            'SELECT name FROM tickets WHERE id = $1',
+            [ticketId]
+          );
+          
+          if (eventData && ticketData && session.customer_details?.email) {
+            const purchaseEmail = generatePurchaseConfirmationEmail(
+              session.customer_details?.name || '',
+              session.customer_details.email,
+              eventData.title,
+              ticketData.name,
+              session.amount_total || 0,
+              session.currency || 'jpy',
+              accessToken,
+              eventSlug
+            );
+            
+            await sendEmail(
+              session.customer_details.email,
+              `【購入完了】${eventData.title} - チケット購入が完了しました`,
+              purchaseEmail
+            );
+          }
+        } catch (emailError) {
+          console.error('Failed to send purchase confirmation email:', emailError);
+        }
 
         console.log('Purchase completed:', purchase.id);
         break;

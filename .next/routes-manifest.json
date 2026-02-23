@@ -134,6 +134,12 @@
       "namedRegex": "^/api/admin/artists(?:/)?$"
     },
     {
+      "page": "/api/admin/auth",
+      "regex": "^/api/admin/auth(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/auth(?:/)?$"
+    },
+    {
       "page": "/api/admin/events",
       "regex": "^/api/admin/events(?:/)?$",
       "routeKeys": {},
@@ -164,6 +170,36 @@
       "namedRegex": "^/api/artists(?:/)?$"
     },
     {
+      "page": "/api/auth/forgot-password",
+      "regex": "^/api/auth/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/api/auth/login",
+      "regex": "^/api/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/login(?:/)?$"
+    },
+    {
+      "page": "/api/auth/me",
+      "regex": "^/api/auth/me(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/me(?:/)?$"
+    },
+    {
+      "page": "/api/auth/register",
+      "regex": "^/api/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/register(?:/)?$"
+    },
+    {
+      "page": "/api/auth/reset-password",
+      "regex": "^/api/auth/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/reset\\-password(?:/)?$"
+    },
+    {
       "page": "/api/events",
       "regex": "^/api/events(?:/)?$",
       "routeKeys": {},
@@ -174,6 +210,12 @@
       "regex": "^/api/health(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/health(?:/)?$"
+    },
+    {
+      "page": "/api/purchases/my",
+      "regex": "^/api/purchases/my(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/purchases/my(?:/)?$"
     },
     {
       "page": "/api/stripe/checkout",
@@ -210,6 +252,36 @@
       "regex": "^/events(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/events(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/mypage",
+      "regex": "^/mypage(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/mypage(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/reset-password",
+      "regex": "^/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reset\\-password(?:/)?$"
     },
     {
       "page": "/success",

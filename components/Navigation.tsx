@@ -160,11 +160,12 @@ export default function Navigation() {
               <>
                 <Link
                   href="/mypage"
-                  className="block text-purple-400 px-3 py-2 rounded hover:bg-gray-800 transition"
+                  className="block text-purple-400 px-3 py-2 rounded hover:bg-gray-800 transition flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
+                  title="マイページ"
                 >
-                  <i className="fas fa-user mr-2"></i>
-                  {userName || 'マイページ'}
+                  <i className="fas fa-user-circle mr-2 text-lg"></i>
+                  <span>{userName || 'マイページ'}</span>
                 </Link>
                 <button
                   onClick={() => {

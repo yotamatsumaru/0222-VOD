@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '@/lib/db';
+import { generateWelcomeEmail, sendEmail } from '@/lib/email';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -42,6 +43,19 @@ export async function POST(request: NextRequest) {
     );
 
     const user = result.rows[0];
+
+    // ウェルカムメール送信（非同期、エラーでも登録は成功扱い）
+    try {
+      const welcomeEmail = generateWelcomeEmail(user.name || '', user.email);
+      await sendEmail(
+        user.email,
+        '【ストリーミングプラットフォーム】ご登録ありがとうございます',
+        welcomeEmail
+      );
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // メール送信失敗でもユーザー登録は成功とする
+    }
 
     // Generate JWT token
     const token = jwt.sign(

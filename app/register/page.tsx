@@ -140,7 +140,7 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-900 bg-opacity-50 border-2 border-red-400 text-red-200 px-4 py-3 rounded-lg text-sm font-semibold shadow-lg">
                 <i className="fas fa-exclamation-circle mr-2"></i>
                 {error}
               </div>
