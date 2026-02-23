@@ -24,6 +24,9 @@ interface Artist {
   name: string;
 }
 
+type SortField = 'title' | 'artist_name' | 'status' | 'start_time';
+type SortOrder = 'asc' | 'desc';
+
 export default function EventsManager() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +34,8 @@ export default function EventsManager() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<Set<number>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
+  const [sortField, setSortField] = useState<SortField>('start_time');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   useEffect(() => {
     fetchEvents();
@@ -73,6 +78,7 @@ export default function EventsManager() {
 
       if (response.ok) {
         fetchEvents();
+        alert('イベントを削除しました');
       } else {
         alert('削除に失敗しました');
       }
@@ -96,8 +102,10 @@ export default function EventsManager() {
 
       if (response.ok) {
         fetchEvents();
+        alert('ステータスを更新しました');
       } else {
-        alert('更新に失敗しました');
+        const error = await response.json();
+        alert(`更新に失敗しました: ${error.message || ''}`);
       }
     } catch (error) {
       console.error('Update error:', error);
@@ -107,10 +115,10 @@ export default function EventsManager() {
 
   // 一括選択/解除
   const handleSelectAll = () => {
-    if (selectedEvents.size === events.length) {
+    if (selectedEvents.size === sortedEvents.length) {
       setSelectedEvents(new Set());
     } else {
-      setSelectedEvents(new Set(events.map(e => e.id)));
+      setSelectedEvents(new Set(sortedEvents.map(e => e.id)));
     }
   };
 
@@ -192,17 +200,53 @@ export default function EventsManager() {
     }
   };
 
+  // ソート機能
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedEvents = [...events].sort((a, b) => {
+    let aValue: any = a[sortField];
+    let bValue: any = b[sortField];
+
+    // Handle null/undefined values
+    if (aValue === null || aValue === undefined) aValue = '';
+    if (bValue === null || bValue === undefined) bValue = '';
+
+    // Convert to string for comparison
+    aValue = String(aValue).toLowerCase();
+    bValue = String(bValue).toLowerCase();
+
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <i className="fas fa-sort text-gray-600 ml-1"></i>;
+    }
+    return sortOrder === 'asc' 
+      ? <i className="fas fa-sort-up text-purple-400 ml-1"></i>
+      : <i className="fas fa-sort-down text-purple-400 ml-1"></i>;
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; color: string }> = {
-      upcoming: { label: '配信予定', color: 'bg-blue-500/20 text-blue-300' },
-      live: { label: '配信中', color: 'bg-red-500/20 text-red-300' },
-      archived: { label: 'アーカイブ', color: 'bg-green-500/20 text-green-300' },
-      draft: { label: '下書き', color: 'bg-gray-500/20 text-gray-300' },
+      upcoming: { label: '配信予定', color: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+      live: { label: '配信中', color: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+      archived: { label: 'アーカイブ', color: 'bg-green-500/20 text-green-300 border border-green-500/30' },
+      draft: { label: '下書き', color: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
     };
     
-    const config = statusConfig[status] || { label: status, color: 'bg-gray-500/20 text-gray-300' };
+    const config = statusConfig[status] || { label: status, color: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${config.color}`}>
         {config.label}
       </span>
     );
@@ -212,8 +256,8 @@ export default function EventsManager() {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ja-JP', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -294,20 +338,40 @@ export default function EventsManager() {
                 <th className="p-4 w-12">
                   <input
                     type="checkbox"
-                    checked={selectedEvents.size === events.length && events.length > 0}
+                    checked={selectedEvents.size === sortedEvents.length && sortedEvents.length > 0}
                     onChange={handleSelectAll}
                     className="w-4 h-4 rounded border-gray-600 text-purple-600 focus:ring-purple-500"
                   />
                 </th>
-                <th className="p-4">タイトル</th>
-                <th className="p-4">アーティスト</th>
-                <th className="p-4">ステータス</th>
-                <th className="p-4">配信開始</th>
+                <th className="p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => handleSort('title')}>
+                  <div className="flex items-center">
+                    タイトル
+                    {getSortIcon('title')}
+                  </div>
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => handleSort('artist_name')}>
+                  <div className="flex items-center">
+                    アーティスト
+                    {getSortIcon('artist_name')}
+                  </div>
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => handleSort('status')}>
+                  <div className="flex items-center">
+                    ステータス
+                    {getSortIcon('status')}
+                  </div>
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => handleSort('start_time')}>
+                  <div className="flex items-center">
+                    配信開始
+                    {getSortIcon('start_time')}
+                  </div>
+                </th>
                 <th className="p-4 text-right">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {events.map((event) => (
+              {sortedEvents.map((event) => (
                 <tr key={event.id} className="hover:bg-white/5 transition">
                   <td className="p-4">
                     <input
@@ -326,27 +390,28 @@ export default function EventsManager() {
                           className="w-16 h-10 object-cover rounded"
                         />
                       )}
-                      <div>
-                        <div className="text-white font-medium">{event.title}</div>
-                        <div className="text-gray-400 text-xs">@{event.slug}</div>
+                      <div className="min-w-0">
+                        <div className="text-white font-medium truncate">{event.title}</div>
+                        <div className="text-gray-400 text-xs truncate">@{event.slug}</div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-gray-300">{event.artist_name}</span>
+                    <span className="text-gray-300 whitespace-nowrap">{event.artist_name}</span>
                   </td>
                   <td className="p-4">
                     {getStatusBadge(event.status)}
                   </td>
                   <td className="p-4">
-                    <span className="text-gray-300 text-sm">{formatDate(event.start_time)}</span>
+                    <span className="text-gray-300 text-sm whitespace-nowrap">{formatDate(event.start_time)}</span>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
                       <select
                         value={event.status}
                         onChange={(e) => handleStatusUpdate(event.id, e.target.value)}
-                        className="px-3 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:ring-2 focus:ring-purple-500"
+                        className="px-3 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:ring-2 focus:ring-purple-500 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <option value="draft">下書き</option>
                         <option value="upcoming">配信予定</option>
@@ -381,7 +446,7 @@ export default function EventsManager() {
 
       {/* カード表示（モバイル・タブレット） */}
       <div className="lg:hidden space-y-4">
-        {events.map((event) => (
+        {sortedEvents.map((event) => (
           <div
             key={event.id}
             className="bg-black bg-opacity-40 backdrop-blur-md rounded-xl border border-gray-800 p-4"
@@ -402,7 +467,7 @@ export default function EventsManager() {
               )}
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-medium truncate">{event.title}</h3>
-                <p className="text-gray-400 text-sm">@{event.slug}</p>
+                <p className="text-gray-400 text-sm truncate">@{event.slug}</p>
               </div>
             </div>
             
