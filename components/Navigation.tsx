@@ -88,10 +88,13 @@ export default function Navigation() {
               <>
                 <Link
                   href="/mypage"
-                  className="text-purple-400 hover:text-purple-300 px-3 py-2 transition"
+                  className="text-purple-400 hover:text-purple-300 px-3 py-2 transition inline-flex items-center"
+                  onClick={(e) => {
+                    console.log('[Navigation] MyPage link clicked');
+                  }}
                 >
-                  <i className="fas fa-user mr-2"></i>
-                  {userName || 'マイページ'}
+                  <i className="fas fa-user-circle mr-2 text-lg"></i>
+                  <span>{userName || 'マイページ'}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
