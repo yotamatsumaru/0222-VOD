@@ -49,6 +49,11 @@ export default function Navigation() {
     router.refresh();
   };
 
+  const handleMyPageClick = () => {
+    console.log('[Navigation] Navigating to MyPage');
+    router.push('/mypage');
+  };
+
   return (
     <nav className="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,14 +91,13 @@ export default function Navigation() {
 
             {isLoggedIn ? (
               <>
-                <Link
-                  href="/mypage"
-                  className="text-purple-400 hover:text-purple-300 px-3 py-2 transition inline-flex items-center"
-                  prefetch={true}
+                <button
+                  onClick={handleMyPageClick}
+                  className="text-purple-400 hover:text-purple-300 px-3 py-2 transition inline-flex items-center cursor-pointer"
                 >
                   <i className="fas fa-user-circle mr-2 text-lg"></i>
                   <span>{userName || 'マイページ'}</span>
-                </Link>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="text-gray-400 hover:text-white px-3 py-2 transition"
