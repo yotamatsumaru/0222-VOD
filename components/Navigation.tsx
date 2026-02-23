@@ -15,6 +15,7 @@ export default function Navigation() {
     // ログイン状態をチェック
     const checkAuth = async () => {
       const authenticated = isAuthenticated();
+      console.log('[Navigation] Is authenticated:', authenticated);
       setIsLoggedIn(authenticated);
 
       if (authenticated) {
@@ -23,12 +24,16 @@ export default function Navigation() {
           const response = await fetch('/api/auth/me', {
             headers: getAuthHeaders() as HeadersInit,
           });
+          console.log('[Navigation] User info response:', response.status);
           if (response.ok) {
             const data = await response.json();
+            console.log('[Navigation] User data:', data);
             setUserName(data.user.name || data.user.email);
+          } else {
+            console.error('[Navigation] Failed to get user info:', response.status);
           }
         } catch (error) {
-          console.error('Failed to fetch user:', error);
+          console.error('[Navigation] Failed to fetch user:', error);
         }
       }
     };
