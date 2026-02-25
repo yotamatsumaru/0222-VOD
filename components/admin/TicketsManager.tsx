@@ -292,11 +292,16 @@ function TicketFormModal({
         onSuccess();
       } else {
         const error = await response.json();
-        alert(`エラー: ${error.message || '保存に失敗しました'}`);
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: error
+        });
+        alert(`エラー (${response.status}): ${error.error || error.message || '保存に失敗しました'}\n\n詳細: ${error.details || 'なし'}`);
       }
     } catch (error) {
       console.error('Submit error:', error);
-      alert('保存に失敗しました');
+      alert(`保存に失敗しました\n\nエラー: ${error instanceof Error ? error.message : '不明なエラー'}\n\nブラウザコンソール（F12）で詳細を確認してください。`);
     } finally {
       setLoading(false);
     }
