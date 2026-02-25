@@ -75,6 +75,12 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe Checkout Session
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    
+    // JPYは「ゼロ小数通貨」なので、円単位で金額を指定する必要がある
+    // DBには銭単位で保存されているため、JPYの場合は100で割る
+    const isJPY = ticket.currency.toLowerCase() === 'jpy';
+    const stripeAmount = isJPY ? Math.round(ticket.price / 100) : ticket.price;
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -86,7 +92,7 @@ export async function POST(request: NextRequest) {
               description: ticket.description || undefined,
               images: event.thumbnail_url ? [event.thumbnail_url] : undefined,
             },
-            unit_amount: ticket.price,
+            unit_amount: stripeAmount,
           },
           quantity: 1,
         },
