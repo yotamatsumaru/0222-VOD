@@ -90,7 +90,7 @@ export default function TicketPurchase({ tickets, eventSlug }: TicketPurchasePro
               )}
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-bold text-purple-400">
-                  {ticket.currency === 'JPY' ? '¥' : '$'}
+                  {ticket.currency?.toLowerCase() === 'jpy' ? '¥' : '$'}
                   {(ticket.price / 100).toLocaleString()}
                 </span>
                 {!soldOut && (
