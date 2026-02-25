@@ -9,7 +9,7 @@ async function patchHandler(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, price, stock, isActive, is_active } = body;
+    const { name, description, price, currency, stock, isActive, is_active } = body;
 
     // Support both camelCase and snake_case
     const finalIsActive = isActive !== undefined ? isActive : is_active;
@@ -19,12 +19,13 @@ async function patchHandler(
         name = COALESCE($1, name),
         description = COALESCE($2, description),
         price = COALESCE($3, price),
-        stock = COALESCE($4, stock),
-        is_active = COALESCE($5, is_active),
+        currency = COALESCE($4, currency),
+        stock = COALESCE($5, stock),
+        is_active = COALESCE($6, is_active),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $6
+      WHERE id = $7
       RETURNING *`,
-      [name, description, price, stock, finalIsActive, parseInt(id)]
+      [name, description, price, currency, stock, finalIsActive, parseInt(id)]
     );
 
     if (!ticket) {

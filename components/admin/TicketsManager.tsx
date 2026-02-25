@@ -391,6 +391,23 @@ function TicketFormModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
+                通貨
+              </label>
+              <select
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="jpy">JPY (日本円)</option>
+                <option value="usd">USD (米ドル)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 在庫数
               </label>
               <input
