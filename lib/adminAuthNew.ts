@@ -11,7 +11,9 @@ export interface AdminJWTPayload {
   adminId: number;
   username: string;
   role: 'super_admin' | 'artist_admin';
+  email?: string;
   artistId?: number;
+  artistName?: string;
 }
 
 /**

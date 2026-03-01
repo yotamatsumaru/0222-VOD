@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAdmin } from '@/lib/adminAuthNew';
+import { getOne } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Artist Adminの場合、アーティスト名を取得
+    let artistName: string | undefined;
+    if (result.admin?.artist_id) {
+      const artist = await getOne<{ name: string }>(
+        'SELECT name FROM artists WHERE id = $1',
+        [result.admin.artist_id]
+      );
+      artistName = artist?.name;
+    }
+
     return NextResponse.json({
       success: true,
       token: result.token,
@@ -30,7 +41,9 @@ export async function POST(request: NextRequest) {
         id: result.admin?.id,
         username: result.admin?.username,
         role: result.role,
-        artistId: result.admin?.artist_id,
+        email: result.admin?.email,
+        artist_id: result.admin?.artist_id,
+        artist_name: artistName,
       },
     });
   } catch (error) {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Ticket {
   id: number;
@@ -13,14 +12,20 @@ interface Ticket {
   is_active: boolean;
   event_title: string;
   event_id: number;
+  artist_id?: number;
 }
 
 interface Event {
   id: number;
   title: string;
+  artist_id?: number;
 }
 
-export default function TicketsManager() {
+interface TicketsManagerProps {
+  artistId?: number;
+}
+
+export default function TicketsManager({ artistId }: TicketsManagerProps) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -32,10 +37,10 @@ export default function TicketsManager() {
 
   const fetchTickets = async () => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/tickets', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -44,7 +49,28 @@ export default function TicketsManager() {
       }
       
       const data = await response.json();
-      setTickets(Array.isArray(data) ? data : []);
+      let ticketsData = Array.isArray(data) ? data : [];
+      
+      // Artist Adminの場合、自分のアーティストのイベントのチケットのみフィルタ
+      if (artistId) {
+        // イベント情報を取得してフィルタリング
+        const eventsResponse = await fetch('/api/admin/events', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (eventsResponse.ok) {
+          const eventsData = await eventsResponse.json();
+          const artistEventIds = eventsData
+            .filter((event: any) => event.artist_id === artistId)
+            .map((event: any) => event.id);
+          ticketsData = ticketsData.filter((ticket: Ticket) => 
+            artistEventIds.includes(ticket.event_id)
+          );
+        }
+      }
+      
+      setTickets(ticketsData);
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
       setTickets([]);
@@ -57,11 +83,11 @@ export default function TicketsManager() {
     if (!confirm('このチケットを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -78,12 +104,12 @@ export default function TicketsManager() {
 
   const toggleActive = async (id: number, currentStatus: boolean) => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/admin/tickets/${id}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
@@ -245,10 +271,10 @@ function TicketFormModal({
 
   const fetchEvents = async () => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/events', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const data = await response.json();
@@ -263,7 +289,7 @@ function TicketFormModal({
     setLoading(true);
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const url = ticket 
         ? `/api/admin/tickets/${ticket.id}`
         : '/api/admin/tickets';
@@ -277,7 +303,7 @@ function TicketFormModal({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Event {
   id: number;
@@ -27,7 +26,11 @@ interface Artist {
 type SortField = 'title' | 'artist_name' | 'status' | 'start_time';
 type SortOrder = 'asc' | 'desc';
 
-export default function EventsManager() {
+interface EventsManagerProps {
+  artistId?: number;
+}
+
+export default function EventsManager({ artistId }: EventsManagerProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -43,10 +46,10 @@ export default function EventsManager() {
 
   const fetchEvents = async () => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/events', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -55,7 +58,14 @@ export default function EventsManager() {
       }
       
       const data = await response.json();
-      setEvents(Array.isArray(data) ? data : []);
+      let eventsData = Array.isArray(data) ? data : [];
+      
+      // Artist Adminの場合、自分のアーティストのイベントのみフィルタ
+      if (artistId) {
+        eventsData = eventsData.filter(event => event.artist_id === artistId);
+      }
+      
+      setEvents(eventsData);
     } catch (error) {
       console.error('Failed to fetch events:', error);
       setEvents([]);
@@ -68,11 +78,11 @@ export default function EventsManager() {
     if (!confirm('このイベントを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -90,12 +100,12 @@ export default function EventsManager() {
 
   const handleStatusUpdate = async (id: number, newStatus: string) => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -144,12 +154,12 @@ export default function EventsManager() {
     }
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const deletePromises = Array.from(selectedEvents).map(id =>
         fetch(`/api/admin/events/${id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Basic ${credentials}`
+            'Authorization': `Bearer ${token}`
           }
         })
       );
@@ -177,13 +187,13 @@ export default function EventsManager() {
     }
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const updatePromises = Array.from(selectedEvents).map(id =>
         fetch(`/api/admin/events/${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Basic ${credentials}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({ status: bulkStatus })
         })
@@ -572,10 +582,10 @@ function EventFormModal({
 
   const fetchArtists = async () => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/artists', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -593,7 +603,7 @@ function EventFormModal({
     setLoading(true);
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const url = event 
         ? `/api/admin/events/${event.id}`
         : '/api/admin/events';
@@ -604,7 +614,7 @@ function EventFormModal({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,

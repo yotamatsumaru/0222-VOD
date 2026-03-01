@@ -1,0 +1,3 @@
+{
+  "/api/admin/auth/verify/route": "app/api/admin/auth/verify/route.js"
+}

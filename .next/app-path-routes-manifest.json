@@ -9,6 +9,7 @@
   "/api/admin/artists/route": "/api/admin/artists",
   "/api/admin/auth/login/route": "/api/admin/auth/login",
   "/api/admin/auth/route": "/api/admin/auth",
+  "/api/admin/auth/verify/route": "/api/admin/auth/verify",
   "/api/admin/events/[id]/route": "/api/admin/events/[id]",
   "/api/admin/events/route": "/api/admin/events",
   "/api/admin/purchases/route": "/api/admin/purchases",

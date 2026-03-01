@@ -5,18 +5,22 @@ import EventsManager from '@/components/admin/EventsManager';
 import ArtistsManager from '@/components/admin/ArtistsManager';
 import TicketsManager from '@/components/admin/TicketsManager';
 import PurchasesView from '@/components/admin/PurchasesView';
-import { 
-  isAdminAuthenticated, 
-  setAdminAuthenticated, 
-  setAdminCredentials,
-  getAdminCredentials 
-} from '@/lib/adminStorage';
+import AdminsManager from '@/components/admin/AdminsManager';
 
 interface Stats {
   totalSales: number;
   totalPurchases: number;
   totalEvents: number;
   totalArtists: number;
+}
+
+interface AdminUser {
+  id: number;
+  username: string;
+  role: 'super_admin' | 'artist_admin';
+  email?: string;
+  artist_id?: number;
+  artist_name?: string;
 }
 
 export default function AdminPage() {
@@ -27,14 +31,37 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState<Stats | null>(null);
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     // Check if already authenticated
-    if (isAdminAuthenticated()) {
-      setIsAuthenticated(true);
-      fetchStats();
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      verifyToken(token);
     }
   }, []);
+
+  const verifyToken = async (token: string) => {
+    try {
+      const response = await fetch('/api/admin/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAdminUser(data.admin);
+        setIsAuthenticated(true);
+        fetchStats(token);
+      } else {
+        localStorage.removeItem('admin_token');
+      }
+    } catch (err) {
+      console.error('Token verification error:', err);
+      localStorage.removeItem('admin_token');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,21 +69,23 @@ export default function AdminPage() {
     setLoading(true);
 
     try {
-      const credentials = btoa(`${username}:${password}`);
-      const response = await fetch('/api/admin/auth', {
+      const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${credentials}`
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setAdminAuthenticated(true);
-        setAdminCredentials(credentials);
+        localStorage.setItem('admin_token', data.token);
+        setAdminUser(data.admin);
         setIsAuthenticated(true);
-        fetchStats();
+        fetchStats(data.token);
       } else {
-        setError('認証に失敗しました。ユーザー名とパスワードを確認してください。');
+        setError(data.error || '認証に失敗しました。ユーザー名とパスワードを確認してください。');
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -67,30 +96,19 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
-    setAdminAuthenticated(false);
+    localStorage.removeItem('admin_token');
     setIsAuthenticated(false);
+    setAdminUser(null);
     setUsername('');
     setPassword('');
+    setActiveTab('dashboard');
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (token: string) => {
     try {
-      const credentials = getAdminCredentials();
-      if (!credentials) {
-        setError('認証情報が見つかりません');
-        // デフォルト値を設定
-        setStats({
-          totalSales: 0,
-          totalPurchases: 0,
-          totalEvents: 0,
-          totalArtists: 0,
-        });
-        return;
-      }
-      
       const response = await fetch('/api/admin/stats', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -99,7 +117,6 @@ export default function AdminPage() {
         setStats(data);
       } else {
         console.error('Failed to fetch stats');
-        // エラー時もデフォルト値を設定
         setStats({
           totalSales: 0,
           totalPurchases: 0,
@@ -109,7 +126,6 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Failed to fetch stats:', err);
-      // エラー時もデフォルト値を設定
       setStats({
         totalSales: 0,
         totalPurchases: 0,
@@ -118,6 +134,8 @@ export default function AdminPage() {
       });
     }
   };
+
+  const isSuperAdmin = adminUser?.role === 'super_admin';
 
   if (!isAuthenticated) {
     return (
@@ -176,7 +194,19 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-900">
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">管理画面</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-white">管理画面</h1>
+            <p className="text-sm text-gray-400 mt-1">
+              {adminUser?.username} 
+              {isSuperAdmin ? (
+                <span className="ml-2 px-2 py-1 bg-purple-600 text-white text-xs rounded">Super Admin</span>
+              ) : (
+                <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                  Artist Admin {adminUser?.artist_name && `- ${adminUser.artist_name}`}
+                </span>
+              )}
+            </p>
+          </div>
           <button
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
@@ -188,10 +218,10 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="bg-gray-800 rounded-lg p-1 mb-6 flex space-x-1">
+        <div className="bg-gray-800 rounded-lg p-1 mb-6 flex flex-wrap gap-1">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
               activeTab === 'dashboard'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white'
@@ -201,7 +231,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => setActiveTab('events')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
               activeTab === 'events'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white'
@@ -209,19 +239,21 @@ export default function AdminPage() {
           >
             イベント管理
           </button>
-          <button
-            onClick={() => setActiveTab('artists')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
-              activeTab === 'artists'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            アーティスト管理
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('artists')}
+              className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
+                activeTab === 'artists'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              アーティスト管理
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('tickets')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
               activeTab === 'tickets'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white'
@@ -231,7 +263,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => setActiveTab('purchases')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
               activeTab === 'purchases'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white'
@@ -239,6 +271,18 @@ export default function AdminPage() {
           >
             購入履歴
           </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
+                activeTab === 'admins'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              管理者管理
+            </button>
+          )}
         </div>
 
         {/* Tab Content */}
@@ -279,10 +323,11 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'events' && <EventsManager />}
-          {activeTab === 'artists' && <ArtistsManager />}
-          {activeTab === 'tickets' && <TicketsManager />}
-          {activeTab === 'purchases' && <PurchasesView />}
+          {activeTab === 'events' && <EventsManager artistId={adminUser?.artist_id} />}
+          {activeTab === 'artists' && isSuperAdmin && <ArtistsManager />}
+          {activeTab === 'tickets' && <TicketsManager artistId={adminUser?.artist_id} />}
+          {activeTab === 'purchases' && <PurchasesView artistId={adminUser?.artist_id} />}
+          {activeTab === 'admins' && isSuperAdmin && <AdminsManager />}
         </div>
       </div>
     </div>

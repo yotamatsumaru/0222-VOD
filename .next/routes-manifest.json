@@ -166,6 +166,12 @@
       "namedRegex": "^/api/admin/auth/login(?:/)?$"
     },
     {
+      "page": "/api/admin/auth/verify",
+      "regex": "^/api/admin/auth/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/auth/verify(?:/)?$"
+    },
+    {
       "page": "/api/admin/events",
       "regex": "^/api/admin/events(?:/)?$",
       "routeKeys": {},

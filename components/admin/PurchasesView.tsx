@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Purchase {
   id: number;
@@ -17,9 +16,14 @@ interface Purchase {
   purchased_at: string;
   event_title?: string;
   ticket_name?: string;
+  artist_id?: number;
 }
 
-export default function PurchasesView() {
+interface PurchasesViewProps {
+  artistId?: number;
+}
+
+export default function PurchasesView({ artistId }: PurchasesViewProps) {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,10 +35,10 @@ export default function PurchasesView() {
   const fetchPurchases = async () => {
     try {
       setLoading(true);
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/purchases', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -43,7 +47,27 @@ export default function PurchasesView() {
       }
 
       const data = await response.json();
-      setPurchases(data);
+      let purchasesData = data;
+      
+      // Artist Adminの場合、自分のアーティストのイベントの購入のみフィルタ
+      if (artistId) {
+        const eventsResponse = await fetch('/api/admin/events', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (eventsResponse.ok) {
+          const eventsData = await eventsResponse.json();
+          const artistEventIds = eventsData
+            .filter((event: any) => event.artist_id === artistId)
+            .map((event: any) => event.id);
+          purchasesData = purchasesData.filter((purchase: Purchase) =>
+            artistEventIds.includes(purchase.event_id)
+          );
+        }
+      }
+      
+      setPurchases(purchasesData);
     } catch (err) {
       setError('購入履歴の取得に失敗しました');
       console.error('Failed to fetch purchases:', err);
