@@ -7,8 +7,10 @@ interface Admin {
   username: string;
   role: 'super_admin' | 'artist_admin';
   email?: string;
-  artist_id?: number;
-  artist_name?: string;
+  artist_id?: number; // 後方互換性（非推奨）
+  artist_ids?: number[]; // 新: 複数アーティストID
+  artist_name?: string; // 後方互換性（非推奨）
+  artist_names?: string[]; // 新: 複数アーティスト名
   is_active: boolean;
   created_at: string;
 }
@@ -29,7 +31,8 @@ export default function AdminsManager() {
     password: '',
     email: '',
     role: 'artist_admin' as 'super_admin' | 'artist_admin',
-    artist_id: '',
+    artist_id: '', // 後方互換性（非推奨）
+    artist_ids: [] as number[], // 新: 複数アーティストID
     is_active: true
   });
 
@@ -81,6 +84,7 @@ export default function AdminsManager() {
       email: '',
       role: 'artist_admin',
       artist_id: '',
+      artist_ids: [],
       is_active: true
     });
     setShowModal(true);
@@ -94,6 +98,7 @@ export default function AdminsManager() {
       email: admin.email || '',
       role: admin.role,
       artist_id: admin.artist_id?.toString() || '',
+      artist_ids: admin.artist_ids || (admin.artist_id ? [admin.artist_id] : []),
       is_active: admin.is_active
     });
     setShowModal(true);

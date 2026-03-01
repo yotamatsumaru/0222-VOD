@@ -63,17 +63,20 @@ export interface Admin {
   username: string;
   password_hash: string;
   role: 'super_admin' | 'artist_admin';
-  artist_id?: number;
+  artist_id?: number; // 後方互換性のため残す（非推奨）
+  artist_ids?: number[]; // 新: 複数アーティスト対応
   email?: string;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
   artist?: Artist;
+  artists?: Artist[]; // 新: 複数アーティスト
 }
 
 export interface AdminWithArtist extends Admin {
   artist_name?: string;
   artist_slug?: string;
+  artist_names?: string[]; // 新: 複数アーティスト名
 }
 
 // API Response Types

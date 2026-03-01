@@ -27,10 +27,11 @@ type SortField = 'title' | 'artist_name' | 'status' | 'start_time';
 type SortOrder = 'asc' | 'desc';
 
 interface EventsManagerProps {
-  artistId?: number;
+  artistId?: number; // 後方互換性（非推奨）
+  artistIds?: number[]; // 新: 複数アーティストID
 }
 
-export default function EventsManager({ artistId }: EventsManagerProps) {
+export default function EventsManager({ artistId, artistIds }: EventsManagerProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -60,9 +61,10 @@ export default function EventsManager({ artistId }: EventsManagerProps) {
       const data = await response.json();
       let eventsData = Array.isArray(data) ? data : [];
       
-      // Artist Adminの場合、自分のアーティストのイベントのみフィルタ
-      if (artistId) {
-        eventsData = eventsData.filter(event => event.artist_id === artistId);
+      // Artist Adminの場合、担当アーティストのイベントのみフィルタ
+      const targetArtistIds = artistIds || (artistId ? [artistId] : null);
+      if (targetArtistIds && targetArtistIds.length > 0) {
+        eventsData = eventsData.filter(event => targetArtistIds.includes(event.artist_id));
       }
       
       setEvents(eventsData);

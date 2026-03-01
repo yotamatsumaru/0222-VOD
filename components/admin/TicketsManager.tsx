@@ -22,10 +22,11 @@ interface Event {
 }
 
 interface TicketsManagerProps {
-  artistId?: number;
+  artistId?: number; // 後方互換性（非推奨）
+  artistIds?: number[]; // 新: 複数アーティストID
 }
 
-export default function TicketsManager({ artistId }: TicketsManagerProps) {
+export default function TicketsManager({ artistId, artistIds }: TicketsManagerProps) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -51,8 +52,9 @@ export default function TicketsManager({ artistId }: TicketsManagerProps) {
       const data = await response.json();
       let ticketsData = Array.isArray(data) ? data : [];
       
-      // Artist Adminの場合、自分のアーティストのイベントのチケットのみフィルタ
-      if (artistId) {
+      // Artist Adminの場合、担当アーティストのイベントのチケットのみフィルタ
+      const targetArtistIds = artistIds || (artistId ? [artistId] : null);
+      if (targetArtistIds && targetArtistIds.length > 0) {
         // イベント情報を取得してフィルタリング
         const eventsResponse = await fetch('/api/admin/events', {
           headers: {
@@ -62,7 +64,7 @@ export default function TicketsManager({ artistId }: TicketsManagerProps) {
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
           const artistEventIds = eventsData
-            .filter((event: any) => event.artist_id === artistId)
+            .filter((event: any) => targetArtistIds.includes(event.artist_id))
             .map((event: any) => event.id);
           ticketsData = ticketsData.filter((ticket: Ticket) => 
             artistEventIds.includes(ticket.event_id)

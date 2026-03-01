@@ -19,8 +19,10 @@ interface AdminUser {
   username: string;
   role: 'super_admin' | 'artist_admin';
   email?: string;
-  artist_id?: number;
-  artist_name?: string;
+  artist_id?: number; // 後方互換性（非推奨）
+  artist_ids?: number[]; // 新: 複数アーティストID
+  artist_name?: string; // 後方互換性（非推奨）
+  artist_names?: string[]; // 新: 複数アーティスト名
 }
 
 export default function AdminPage() {
@@ -323,10 +325,10 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'events' && <EventsManager artistId={adminUser?.artist_id} />}
+          {activeTab === 'events' && <EventsManager artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
           {activeTab === 'artists' && isSuperAdmin && <ArtistsManager />}
-          {activeTab === 'tickets' && <TicketsManager artistId={adminUser?.artist_id} />}
-          {activeTab === 'purchases' && <PurchasesView artistId={adminUser?.artist_id} />}
+          {activeTab === 'tickets' && <TicketsManager artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
+          {activeTab === 'purchases' && <PurchasesView artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
           {activeTab === 'admins' && isSuperAdmin && <AdminsManager />}
         </div>
       </div>

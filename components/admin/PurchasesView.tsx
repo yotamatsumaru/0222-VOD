@@ -20,10 +20,11 @@ interface Purchase {
 }
 
 interface PurchasesViewProps {
-  artistId?: number;
+  artistId?: number; // 後方互換性（非推奨）
+  artistIds?: number[]; // 新: 複数アーティストID
 }
 
-export default function PurchasesView({ artistId }: PurchasesViewProps) {
+export default function PurchasesView({ artistId, artistIds }: PurchasesViewProps) {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,8 +50,9 @@ export default function PurchasesView({ artistId }: PurchasesViewProps) {
       const data = await response.json();
       let purchasesData = data;
       
-      // Artist Adminの場合、自分のアーティストのイベントの購入のみフィルタ
-      if (artistId) {
+      // Artist Adminの場合、担当アーティストのイベントの購入のみフィルタ
+      const targetArtistIds = artistIds || (artistId ? [artistId] : null);
+      if (targetArtistIds && targetArtistIds.length > 0) {
         const eventsResponse = await fetch('/api/admin/events', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -59,7 +61,7 @@ export default function PurchasesView({ artistId }: PurchasesViewProps) {
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
           const artistEventIds = eventsData
-            .filter((event: any) => event.artist_id === artistId)
+            .filter((event: any) => targetArtistIds.includes(event.artist_id))
             .map((event: any) => event.id);
           purchasesData = purchasesData.filter((purchase: Purchase) =>
             artistEventIds.includes(purchase.event_id)
