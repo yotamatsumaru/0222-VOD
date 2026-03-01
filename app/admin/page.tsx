@@ -27,6 +27,7 @@ interface AdminUser {
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // 認証チェック中フラグ
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,6 +41,8 @@ export default function AdminPage() {
     const token = localStorage.getItem('admin_token');
     if (token) {
       verifyToken(token);
+    } else {
+      setIsCheckingAuth(false); // トークンがない場合は即座にログイン画面表示
     }
   }, []);
 
@@ -62,6 +65,8 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Token verification error:', err);
       localStorage.removeItem('admin_token');
+    } finally {
+      setIsCheckingAuth(false); // 検証完了
     }
   };
 
@@ -145,6 +150,18 @@ export default function AdminPage() {
   };
 
   const isSuperAdmin = adminUser?.role === 'super_admin';
+
+  // 認証チェック中はローディング表示（ログイン画面を表示しない）
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">認証確認中...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
