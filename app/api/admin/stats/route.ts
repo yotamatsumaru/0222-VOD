@@ -7,15 +7,10 @@ async function handler(
   adminInfo: { admin: any; isSuperAdmin: boolean }
 ) {
   try {
-    // Artist Adminの場合、自分のアーティストのデータのみ集計
-    const artistFilter = adminInfo.isSuperAdmin 
-      ? '' 
-      : `JOIN events e ON p.event_id = e.id WHERE e.artist_id = ${adminInfo.admin.artistId}`;
+    // Artist Adminの場合、自分のアーティストのデータのみ集計（複数アーティスト対応）
+    const artistIds = adminInfo.admin.artistIds || (adminInfo.admin.artistId ? [adminInfo.admin.artistId] : []);
+    const artistIdsStr = artistIds.length > 0 ? artistIds.join(',') : '0';
     
-    const eventFilter = adminInfo.isSuperAdmin
-      ? ''
-      : `WHERE artist_id = ${adminInfo.admin.artistId}`;
-
     // Get total revenue
     const revenueQuery = adminInfo.isSuperAdmin
       ? `SELECT COALESCE(SUM(amount), 0) as total_revenue 
@@ -24,7 +19,7 @@ async function handler(
       : `SELECT COALESCE(SUM(p.amount), 0) as total_revenue 
          FROM purchases p
          JOIN events e ON p.event_id = e.id
-         WHERE p.status = 'completed' AND e.artist_id = ${adminInfo.admin.artistId}`;
+         WHERE p.status = 'completed' AND e.artist_id IN (${artistIdsStr})`;
     
     const revenueResult = await getOne<{ total_revenue: number }>(revenueQuery);
 
@@ -36,21 +31,21 @@ async function handler(
       : `SELECT COUNT(*) as total_purchases 
          FROM purchases p
          JOIN events e ON p.event_id = e.id
-         WHERE p.status = 'completed' AND e.artist_id = ${adminInfo.admin.artistId}`;
+         WHERE p.status = 'completed' AND e.artist_id IN (${artistIdsStr})`;
     
     const purchasesResult = await getOne<{ total_purchases: number }>(purchasesQuery);
 
     // Get total events
     const eventsQuery = adminInfo.isSuperAdmin
       ? 'SELECT COUNT(*) as total_events FROM events'
-      : `SELECT COUNT(*) as total_events FROM events WHERE artist_id = ${adminInfo.admin.artistId}`;
+      : `SELECT COUNT(*) as total_events FROM events WHERE artist_id IN (${artistIdsStr})`;
     
     const eventsResult = await getOne<{ total_events: number }>(eventsQuery);
 
-    // Get total artists (Super Adminのみ)
+    // Get total artists (Super Adminのみ、Artist Adminの場合は担当アーティスト数)
     const artistsResult = adminInfo.isSuperAdmin
       ? await getOne<{ total_artists: number }>('SELECT COUNT(*) as total_artists FROM artists')
-      : { total_artists: 1 };
+      : { total_artists: artistIds.length };
 
     // Get recent purchases (last 10)
     const recentPurchases = await getOne(

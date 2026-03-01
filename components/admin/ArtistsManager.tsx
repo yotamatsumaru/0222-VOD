@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAdminCredentials } from '@/lib/adminStorage';
 
 interface Artist {
   id: number;
@@ -11,7 +10,11 @@ interface Artist {
   image_url?: string;
 }
 
-export default function ArtistsManager() {
+interface ArtistsManagerProps {
+  onDataChanged?: () => void; // 統計再取得用コールバック
+}
+
+export default function ArtistsManager({ onDataChanged }: ArtistsManagerProps = {}) {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -23,10 +26,14 @@ export default function ArtistsManager() {
 
   const fetchArtists = async () => {
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      
       const response = await fetch('/api/admin/artists', {
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -48,16 +55,25 @@ export default function ArtistsManager() {
     if (!confirm('このアーティストを削除してもよろしいですか？')) return;
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        alert('認証が必要です');
+        return;
+      }
+      
       const response = await fetch(`/api/admin/artists/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
       if (response.ok) {
-        fetchArtists();
+        await fetchArtists();
+        // 統計を再取得するために親コンポーネントに通知
+        if (onDataChanged) {
+          onDataChanged();
+        }
       } else {
         alert('削除に失敗しました');
       }
@@ -158,6 +174,10 @@ export default function ArtistsManager() {
             setShowModal(false);
             setEditingArtist(null);
             fetchArtists();
+            // 統計を再取得するために親コンポーネントに通知
+            if (onDataChanged) {
+              onDataChanged();
+            }
           }}
         />
       )}
@@ -187,7 +207,13 @@ function ArtistFormModal({
     setLoading(true);
 
     try {
-      const credentials = getAdminCredentials();
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        alert('認証が必要です');
+        setLoading(false);
+        return;
+      }
+      
       const url = artist 
         ? `/api/admin/artists/${artist.id}`
         : '/api/admin/artists';
@@ -198,7 +224,7 @@ function ArtistFormModal({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${credentials}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData),
       });

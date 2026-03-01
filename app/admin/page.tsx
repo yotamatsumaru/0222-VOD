@@ -137,6 +137,13 @@ export default function AdminPage() {
     }
   };
 
+  const refreshStats = () => {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      fetchStats(token);
+    }
+  };
+
   const isSuperAdmin = adminUser?.role === 'super_admin';
 
   if (!isAuthenticated) {
@@ -326,7 +333,7 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'events' && <EventsManager artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
-          {activeTab === 'artists' && isSuperAdmin && <ArtistsManager />}
+          {activeTab === 'artists' && isSuperAdmin && <ArtistsManager onDataChanged={refreshStats} />}
           {activeTab === 'tickets' && <TicketsManager artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
           {activeTab === 'purchases' && <PurchasesView artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
           {activeTab === 'admins' && isSuperAdmin && <AdminsManager />}
