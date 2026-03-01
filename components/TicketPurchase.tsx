@@ -22,11 +22,20 @@ export default function TicketPurchase({ tickets, eventSlug }: TicketPurchasePro
 
       // Check if user is authenticated
       const token = getAuthToken();
+      console.log('[TicketPurchase] Token check:', token ? 'Token exists' : 'No token');
+      
       if (!token) {
+        console.log('[TicketPurchase] No token, redirecting to login');
         // Redirect to login page with return URL
         router.push(`/login?redirect=/events/${eventSlug}`);
         return;
       }
+
+      console.log('[TicketPurchase] Making checkout request:', {
+        ticketId,
+        eventSlug,
+        hasToken: !!token
+      });
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -41,10 +50,16 @@ export default function TicketPurchase({ tickets, eventSlug }: TicketPurchasePro
       });
 
       const data = await response.json();
+      console.log('[TicketPurchase] API response:', {
+        ok: response.ok,
+        status: response.status,
+        data
+      });
 
       if (!response.ok) {
         if (data.requiresAuth) {
           // Token expired or invalid, redirect to login
+          console.log('[TicketPurchase] Auth required, redirecting to login');
           router.push(`/login?redirect=/events/${eventSlug}`);
           return;
         }
@@ -52,9 +67,14 @@ export default function TicketPurchase({ tickets, eventSlug }: TicketPurchasePro
       }
 
       if (data.url) {
+        console.log('[TicketPurchase] Redirecting to Stripe:', data.url);
         window.location.href = data.url;
+      } else {
+        console.error('[TicketPurchase] No URL in response:', data);
+        throw new Error('チェックアウトURLが取得できませんでした');
       }
     } catch (err: any) {
+      console.error('[TicketPurchase] Error:', err);
       setError(err.message);
       setLoading(false);
     }

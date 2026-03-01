@@ -1,23 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { setAuthToken, isAuthenticated } from '@/lib/userAuth';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // すでにログイン済みの場合はホームにリダイレクト
+    // すでにログイン済みの場合はリダイレクト先へ
     if (isAuthenticated()) {
-      router.push('/');
+      router.push(redirectUrl);
     }
-  }, [router]);
+  }, [router, redirectUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('[Login] Attempting login for:', email);
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,6 +36,7 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+      console.log('[Login] API response:', { ok: response.ok, hasToken: !!data.token });
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
@@ -39,12 +44,14 @@ export default function LoginPage() {
 
       // トークンを保存
       setAuthToken(data.token);
+      console.log('[Login] Token saved, redirecting to:', redirectUrl);
 
-      // ホームにリダイレクト
-      router.push('/');
+      // リダイレクト先へ遷移
+      router.push(redirectUrl);
       router.refresh();
 
     } catch (err: any) {
+      console.error('[Login] Error:', err);
       setError(err.message || 'ログインに失敗しました');
     } finally {
       setLoading(false);
@@ -145,5 +152,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
