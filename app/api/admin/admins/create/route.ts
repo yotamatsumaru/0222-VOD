@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 async function postHandler(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password, email, role, artistId } = body;
+    const { username, password, email, role, artist_ids } = body;
 
     // バリデーション
     if (!username || !password || !role) {
@@ -23,9 +23,10 @@ async function postHandler(request: NextRequest) {
       );
     }
 
-    if (!artistId) {
+    // 複数アーティスト対応: artist_ids配列が必要
+    if (!artist_ids || !Array.isArray(artist_ids) || artist_ids.length === 0) {
       return NextResponse.json(
-        { error: 'Artist ID is required for artist_admin' },
+        { error: 'At least one artist ID is required for artist_admin (artist_ids must be an array)' },
         { status: 400 }
       );
     }
@@ -46,15 +47,33 @@ async function postHandler(request: NextRequest) {
     // パスワードをハッシュ化
     const password_hash = await bcrypt.hash(password, 10);
 
-    // 管理者を作成
+    // 管理者を作成（artist_idはNULL、後方互換性のため残す）
     const admin = await insert(
       `INSERT INTO admins (username, password_hash, email, role, artist_id, is_active)
-       VALUES ($1, $2, $3, $4, $5, true)
+       VALUES ($1, $2, $3, $4, NULL, true)
        RETURNING id, username, email, role, artist_id, is_active, created_at, updated_at`,
-      [username, password_hash, email || null, role, artistId]
+      [username, password_hash, email || null, role]
     );
 
-    return NextResponse.json(admin, { status: 201 });
+    // admin_artists テーブルに複数アーティストを登録
+    for (const artistId of artist_ids) {
+      await insert(
+        `INSERT INTO admin_artists (admin_id, artist_id, created_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)`,
+        [admin.id, artistId]
+      );
+    }
+
+    // admin_with_artists ビューから完全な情報を取得
+    const fullAdmin = await getOne(
+      `SELECT id, username, email, role, artist_id, is_active, created_at, updated_at,
+              artist_ids, artist_names
+       FROM admin_with_artists
+       WHERE id = $1`,
+      [admin.id]
+    );
+
+    return NextResponse.json(fullAdmin || admin, { status: 201 });
   } catch (error) {
     console.error('Create admin error:', error);
     return NextResponse.json(

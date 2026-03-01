@@ -137,6 +137,12 @@ export default function AdminsManager() {
         }
       } else {
         // Create new admin
+        // 複数アーティストIDの検証
+        if (formData.role === 'artist_admin' && formData.artist_ids.length === 0) {
+          alert('アーティストを少なくとも1つ選択してください');
+          return;
+        }
+
         const response = await fetch('/api/admin/admins/create', {
           method: 'POST',
           headers: {
@@ -148,7 +154,7 @@ export default function AdminsManager() {
             password: formData.password,
             email: formData.email || null,
             role: formData.role,
-            artist_id: formData.artist_id ? parseInt(formData.artist_id) : null
+            artist_ids: formData.artist_ids // 複数アーティストID配列を送信
           })
         });
 
@@ -239,7 +245,12 @@ export default function AdminsManager() {
                   )}
                 </td>
                 <td className="py-3 px-4 text-white">
-                  {admin.artist_name || '-'}
+                  {admin.role === 'super_admin' 
+                    ? '-' 
+                    : (admin.artist_names && admin.artist_names.length > 0
+                        ? admin.artist_names.join(', ')
+                        : admin.artist_name || '-')
+                  }
                 </td>
                 <td className="py-3 px-4 text-white">{admin.email || '-'}</td>
                 <td className="py-3 px-4">
@@ -344,21 +355,35 @@ export default function AdminsManager() {
               {formData.role === 'artist_admin' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    担当アーティスト
+                    担当アーティスト（複数選択可）
                   </label>
-                  <select
-                    value={formData.artist_id}
-                    onChange={(e) => setFormData({ ...formData, artist_id: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                  >
-                    <option value="">選択してください</option>
-                    {artists.map((artist) => (
-                      <option key={artist.id} value={artist.id}>
-                        {artist.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="max-h-48 overflow-y-auto bg-gray-700 border border-gray-600 rounded-lg p-3 space-y-2">
+                    {artists.length === 0 ? (
+                      <p className="text-gray-400 text-sm">アーティストが登録されていません</p>
+                    ) : (
+                      artists.map((artist) => (
+                        <label key={artist.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-600 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={formData.artist_ids.includes(artist.id)}
+                            onChange={(e) => {
+                              const newArtistIds = e.target.checked
+                                ? [...formData.artist_ids, artist.id]
+                                : formData.artist_ids.filter(id => id !== artist.id);
+                              setFormData({ ...formData, artist_ids: newArtistIds });
+                            }}
+                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-white text-sm">{artist.name}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {formData.artist_ids.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      選択中: {formData.artist_ids.length}人のアーティスト
+                    </p>
+                  )}
                 </div>
               )}
 
