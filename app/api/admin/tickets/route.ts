@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuthNew';
 import { getAll, insert } from '@/lib/db';
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const tickets = await getAll(
       `SELECT t.*, e.title as event_title
@@ -21,7 +24,10 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const body = await request.json();
     const { eventId, event_id, name, description, price, currency, stock, isActive, is_active } = body;

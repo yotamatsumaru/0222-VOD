@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuthNew';
 import { getAll } from '@/lib/db';
 
-async function handler(request: NextRequest) {
+async function handler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('eventId');

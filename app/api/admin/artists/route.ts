@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuthNew';
 import { getAll, insert } from '@/lib/db';
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const artists = await getAll(
       'SELECT * FROM artists ORDER BY created_at DESC'
@@ -18,7 +21,10 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const body = await request.json();
     const { name, slug, bio, image_url } = body;
