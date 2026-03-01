@@ -62,7 +62,18 @@ export interface Admin {
   id: number;
   username: string;
   password_hash: string;
+  role: 'super_admin' | 'artist_admin';
+  artist_id?: number;
+  email?: string;
+  is_active: boolean;
   created_at: Date;
+  updated_at: Date;
+  artist?: Artist;
+}
+
+export interface AdminWithArtist extends Admin {
+  artist_name?: string;
+  artist_slug?: string;
 }
 
 // API Response Types
