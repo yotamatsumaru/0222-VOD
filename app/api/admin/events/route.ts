@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/adminAuth';
-import { getAll, insert, update } from '@/lib/db';
+import { requireAdmin } from '@/lib/adminAuthNew';
+import { getAll, insert } from '@/lib/db';
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
-    const events = await getAll(
-      `SELECT e.*, a.name as artist_name
-       FROM events e
-       LEFT JOIN artists a ON e.artist_id = a.id
-       ORDER BY e.created_at DESC`
-    );
+    // Artist Adminの場合、自分のアーティストのイベントのみ取得
+    const query = adminInfo.isSuperAdmin
+      ? `SELECT e.*, a.name as artist_name
+         FROM events e
+         LEFT JOIN artists a ON e.artist_id = a.id
+         ORDER BY e.created_at DESC`
+      : `SELECT e.*, a.name as artist_name
+         FROM events e
+         LEFT JOIN artists a ON e.artist_id = a.id
+         WHERE e.artist_id = $1
+         ORDER BY e.created_at DESC`;
+    
+    const params = adminInfo.isSuperAdmin ? [] : [adminInfo.admin.artistId];
+    const events = await getAll(query, params);
 
     return NextResponse.json(events);
   } catch (error) {
@@ -21,7 +32,10 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
     const body = await request.json();
     const {
@@ -108,5 +122,5 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-export const GET = requireAuth(getHandler);
-export const POST = requireAuth(postHandler);
+export const GET = requireAdmin(getHandler);
+export const POST = requireAdmin(postHandler);

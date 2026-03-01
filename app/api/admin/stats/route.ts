@@ -1,32 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/adminAuth';
-import { getOne } from '@/lib/db';
+import { requireAdmin } from '@/lib/adminAuthNew';
+import { getOne, getAll } from '@/lib/db';
 
-async function handler(request: NextRequest) {
+async function handler(
+  request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean }
+) {
   try {
+    // Artist Adminの場合、自分のアーティストのデータのみ集計
+    const artistFilter = adminInfo.isSuperAdmin 
+      ? '' 
+      : `JOIN events e ON p.event_id = e.id WHERE e.artist_id = ${adminInfo.admin.artistId}`;
+    
+    const eventFilter = adminInfo.isSuperAdmin
+      ? ''
+      : `WHERE artist_id = ${adminInfo.admin.artistId}`;
+
     // Get total revenue
-    const revenueResult = await getOne<{ total_revenue: number }>(
-      `SELECT COALESCE(SUM(amount), 0) as total_revenue 
-       FROM purchases 
-       WHERE status = 'completed'`
-    );
+    const revenueQuery = adminInfo.isSuperAdmin
+      ? `SELECT COALESCE(SUM(amount), 0) as total_revenue 
+         FROM purchases 
+         WHERE status = 'completed'`
+      : `SELECT COALESCE(SUM(p.amount), 0) as total_revenue 
+         FROM purchases p
+         JOIN events e ON p.event_id = e.id
+         WHERE p.status = 'completed' AND e.artist_id = ${adminInfo.admin.artistId}`;
+    
+    const revenueResult = await getOne<{ total_revenue: number }>(revenueQuery);
 
     // Get total purchases
-    const purchasesResult = await getOne<{ total_purchases: number }>(
-      `SELECT COUNT(*) as total_purchases 
-       FROM purchases 
-       WHERE status = 'completed'`
-    );
+    const purchasesQuery = adminInfo.isSuperAdmin
+      ? `SELECT COUNT(*) as total_purchases 
+         FROM purchases 
+         WHERE status = 'completed'`
+      : `SELECT COUNT(*) as total_purchases 
+         FROM purchases p
+         JOIN events e ON p.event_id = e.id
+         WHERE p.status = 'completed' AND e.artist_id = ${adminInfo.admin.artistId}`;
+    
+    const purchasesResult = await getOne<{ total_purchases: number }>(purchasesQuery);
 
     // Get total events
-    const eventsResult = await getOne<{ total_events: number }>(
-      'SELECT COUNT(*) as total_events FROM events'
-    );
+    const eventsQuery = adminInfo.isSuperAdmin
+      ? 'SELECT COUNT(*) as total_events FROM events'
+      : `SELECT COUNT(*) as total_events FROM events WHERE artist_id = ${adminInfo.admin.artistId}`;
+    
+    const eventsResult = await getOne<{ total_events: number }>(eventsQuery);
 
-    // Get total artists
-    const artistsResult = await getOne<{ total_artists: number }>(
-      'SELECT COUNT(*) as total_artists FROM artists'
-    );
+    // Get total artists (Super Adminのみ)
+    const artistsResult = adminInfo.isSuperAdmin
+      ? await getOne<{ total_artists: number }>('SELECT COUNT(*) as total_artists FROM artists')
+      : { total_artists: 1 };
 
     // Get recent purchases (last 10)
     const recentPurchases = await getOne(
@@ -89,4 +113,4 @@ async function handler(request: NextRequest) {
   }
 }
 
-export const GET = requireAuth(handler);
+export const GET = requireAdmin(handler);

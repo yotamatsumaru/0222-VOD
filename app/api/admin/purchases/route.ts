@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/adminAuth';
+import { requireAdmin } from '@/lib/adminAuthNew';
 import { getAll } from '@/lib/db';
 
 async function handler(request: NextRequest) {
@@ -38,4 +38,4 @@ async function handler(request: NextRequest) {
   }
 }
 
-export const GET = requireAuth(handler);
+export const GET = requireAdmin(handler);

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/adminAuth';
+import { requireAdmin } from '@/lib/adminAuthNew';
 import { update, remove, getOne } from '@/lib/db';
 
 async function patchHandler(
   request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean },
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -86,6 +87,7 @@ async function patchHandler(
 
 async function deleteHandler(
   request: NextRequest,
+  adminInfo: { admin: any; isSuperAdmin: boolean },
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -109,5 +111,5 @@ async function deleteHandler(
   }
 }
 
-export const PATCH = requireAuth(patchHandler);
-export const DELETE = requireAuth(deleteHandler);
+export const PATCH = requireAdmin(patchHandler);
+export const DELETE = requireAdmin(deleteHandler);
