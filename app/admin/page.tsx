@@ -6,6 +6,7 @@ import ArtistsManager from '@/components/admin/ArtistsManager';
 import TicketsManager from '@/components/admin/TicketsManager';
 import PurchasesView from '@/components/admin/PurchasesView';
 import AdminsManager from '@/components/admin/AdminsManager';
+import UsersManager from '@/components/admin/UsersManager';
 
 interface Stats {
   totalSales: number;
@@ -298,16 +299,28 @@ export default function AdminPage() {
             購入履歴
           </button>
           {isSuperAdmin && (
-            <button
-              onClick={() => setActiveTab('admins')}
-              className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
-                activeTab === 'admins'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              管理者管理
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
+                  activeTab === 'users'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                ユーザー管理
+              </button>
+              <button
+                onClick={() => setActiveTab('admins')}
+                className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
+                  activeTab === 'admins'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                管理者管理
+              </button>
+            </>
           )}
         </div>
 
@@ -353,6 +366,7 @@ export default function AdminPage() {
           {activeTab === 'artists' && isSuperAdmin && <ArtistsManager onDataChanged={refreshStats} />}
           {activeTab === 'tickets' && <TicketsManager artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
           {activeTab === 'purchases' && <PurchasesView artistId={adminUser?.artist_id} artistIds={adminUser?.artist_ids} />}
+          {activeTab === 'users' && isSuperAdmin && <UsersManager />}
           {activeTab === 'admins' && isSuperAdmin && <AdminsManager />}
         </div>
       </div>

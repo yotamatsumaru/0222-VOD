@@ -54,6 +54,14 @@
       "namedRegex": "^/api/admin/tickets/(?<nxtPid>[^/]+?)(?:/)?$"
     },
     {
+      "page": "/api/admin/users/[id]",
+      "regex": "^/api/admin/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/artists/[slug]",
       "regex": "^/api/artists/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -194,6 +202,12 @@
       "regex": "^/api/admin/tickets(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/admin/tickets(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users",
+      "regex": "^/api/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/users(?:/)?$"
     },
     {
       "page": "/api/artists",

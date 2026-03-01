@@ -16,6 +16,8 @@
   "/api/admin/stats/route": "app/api/admin/stats/route.js",
   "/api/admin/tickets/[id]/route": "app/api/admin/tickets/[id]/route.js",
   "/api/admin/tickets/route": "app/api/admin/tickets/route.js",
+  "/api/admin/users/[id]/route": "app/api/admin/users/[id]/route.js",
+  "/api/admin/users/route": "app/api/admin/users/route.js",
   "/api/artists/[slug]/route": "app/api/artists/[slug]/route.js",
   "/api/artists/route": "app/api/artists/route.js",
   "/api/auth/forgot-password/route": "app/api/auth/forgot-password/route.js",
