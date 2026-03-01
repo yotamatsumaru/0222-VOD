@@ -22,6 +22,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/admin/admins/[id]",
+      "regex": "^/api/admin/admins/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/admins/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/admin/artists/[id]",
       "regex": "^/api/admin/artists/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -128,6 +136,18 @@
       "namedRegex": "^/admin(?:/)?$"
     },
     {
+      "page": "/api/admin/admins",
+      "regex": "^/api/admin/admins(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/admins(?:/)?$"
+    },
+    {
+      "page": "/api/admin/admins/create",
+      "regex": "^/api/admin/admins/create(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/admins/create(?:/)?$"
+    },
+    {
       "page": "/api/admin/artists",
       "regex": "^/api/admin/artists(?:/)?$",
       "routeKeys": {},
@@ -138,6 +158,12 @@
       "regex": "^/api/admin/auth(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/admin/auth(?:/)?$"
+    },
+    {
+      "page": "/api/admin/auth/login",
+      "regex": "^/api/admin/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/auth/login(?:/)?$"
     },
     {
       "page": "/api/admin/events",
